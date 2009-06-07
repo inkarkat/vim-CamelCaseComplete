@@ -51,10 +51,14 @@ function! s:BuildRegexp( base )
     \	[ (printf('\[%s%s]', tolower(l:anchors[0]), toupper(l:anchors[0]))) ] +
     \	map(copy(l:anchors[1:]), '"\\%(" . toupper(v:val) . "\\&\\u\\)"') +
     \	['']
-    let l:camelCaseStrictRegexp = join(l:camelCaseAnchors, '\%(\U\&\S\)\*')
+    let l:camelCaseStrictFragments = map(copy(l:camelCaseAnchors), 'v:val . ''\%(_\@!\k\&\U\)\*''')
+    let l:underscoreStrictFragments = map(l:anchors[:-2], 'v:val . ''\%(_\@!\k\)\*_''') + [l:anchors[-1] . '\%(_\@!\k\)\*']
 
-    let l:underscoreStrictRegexp = join(l:anchors, '\%(_\@!\S\)\*_') . '\%(_\@!\S\)\*'
-    return '\V\<\%(' . l:camelCaseStrictRegexp . '\|' . l:underscoreStrictRegexp . '\)\>'
+    let l:fragmentsRegexp = ''
+    for l:i in range(len(l:anchors))
+	let l:fragmentsRegexp .= '\%(' . l:camelCaseStrictFragments[l:i] . '\|' . l:underscoreStrictFragments[l:i] . '\)'
+    endfor
+    return '\V\<' . l:fragmentsRegexp . '\>'
 endfunction
 function! s:CamelCaseComplete( findstart, base )
     if a:findstart
