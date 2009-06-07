@@ -58,9 +58,11 @@ function! s:BuildRegexp( base )
 
     " A strict underscore_word fragment consists of the anchor preceded by
     " underscope(s) (except for the first fragment), followed by keyword
-    " characters without '_'. 
+    " characters without '_'. To match, the first fragment must be followed by
+    " underscore(s); otherwise, this would swallow arbitrary text at the
+    " beginning of a CamelCaseWord. 
     let l:underscoreFragments =
-    \	[l:anchors[0] . '\%(_\@!\k\)\+'] +
+    \	[l:anchors[0] . '\%(_\@!\k\)\+_\@='] +
     \	map(l:anchors[1:], '"_\\+" . v:val . ''\%(_\@!\k\)\+''')
 
     " Assemble all fragments together to build the full regexp. 
@@ -82,6 +84,7 @@ function! s:CamelCaseComplete( findstart, base )
 	endif
 	let l:base = strpart(getline('.'), l:startCol - 1, (col('.') - l:startCol))
 	let s:regexp = s:BuildRegexp(l:base)
+echomsg '****' s:regexp
 	return l:startCol - 1 " Return byte index, not column. 
     elseif ! empty(a:base)
 	" Find keywords matching s:regexp. 
