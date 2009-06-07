@@ -39,24 +39,37 @@ function! s:GetCompleteOption()
 endfunction
 
 function! s:BuildRegexp( base )
-    " Each character is an anchor for the beginning of a CamelCase word. 
+    " Each character is an anchor for the beginning of a CamelCaseWord. 
     let l:anchors = map(split(a:base, '\zs'), 'escape(v:val, "\\")')
 
     " Each CamelCase anchor except the first one must match an upper case
-    " character; the CamelCase word may start with either lower or upper case. 
+    " character; the CamelCaseWord may start with either lower or upper case. 
     " Note: We cannot simply use toupper(); 'ignorecase' may suspend this
     " distinction. We also cannot force case sensitivity via /\C/, because that
     " would apply to the entire pattern and thus also to the underscore_words. 
     let l:camelCaseAnchors = 
     \	[ (printf('\[%s%s]', tolower(l:anchors[0]), toupper(l:anchors[0]))) ] +
-    \	map(copy(l:anchors[1:]), '"\\%(" . toupper(v:val) . "\\&\\u\\)"') +
-    \	['']
-    let l:camelCaseStrictFragments = map(copy(l:camelCaseAnchors), 'v:val . ''\%(_\@!\k\&\U\)\*''')
-    let l:underscoreStrictFragments = map(l:anchors[:-2], 'v:val . ''\%(_\@!\k\)\*_''') + [l:anchors[-1] . '\%(_\@!\k\)\*']
+    \	map(l:anchors[1:], '"\\%(" . toupper(v:val) . "\\&\\u\\)"')
 
+    " A strict CamelCase fragment consists of the CamelCase anchor followed by
+    " (optional, to handle ACRONYMS inside a CamelCaseWord) non-uppercase
+    " keyword characters without '_'. 
+    let l:camelCaseFragments = map(copy(l:camelCaseAnchors), 'v:val . ''\%(_\@!\k\&\U\)\*''')
+
+    " A strict underscore_word fragment consists of the anchor preceded by
+    " underscope(s) (except for the first fragment), followed by keyword
+    " characters without '_'. 
+    let l:underscoreFragments =
+    \	[l:anchors[0] . '\%(_\@!\k\)\+'] +
+    \	map(l:anchors[1:], '"_\\+" . v:val . ''\%(_\@!\k\)\+''')
+
+    " Assemble all fragments together to build the full regexp. 
+    " Each fragment must match either one part of a CamelCaseWord or
+    " underscore_word. This way, combined CamelCase_with_underScoreWords can
+    " also be matched. 
     let l:fragmentsRegexp = ''
     for l:i in range(len(l:anchors))
-	let l:fragmentsRegexp .= '\%(' . l:camelCaseStrictFragments[l:i] . '\|' . l:underscoreStrictFragments[l:i] . '\)'
+	let l:fragmentsRegexp .= '\%(' . l:camelCaseFragments[l:i] . '\|' . l:underscoreFragments[l:i] . '\)'
     endfor
     return '\V\<' . l:fragmentsRegexp . '\>'
 endfunction
@@ -69,7 +82,6 @@ function! s:CamelCaseComplete( findstart, base )
 	endif
 	let l:base = strpart(getline('.'), l:startCol - 1, (col('.') - l:startCol))
 	let s:regexp = s:BuildRegexp(l:base)
-echomsg '****' s:regexp
 	return l:startCol - 1 " Return byte index, not column. 
     elseif ! empty(a:base)
 	" Find keywords matching s:regexp. 
