@@ -56,8 +56,9 @@ function! s:BuildRegexp( base )
     " keyword characters without '_'. 
     let l:camelCaseStrictFragments = map(copy(l:camelCaseAnchors), 'v:val . ''\%(_\@!\k\&\U\)\*''')
 
-    " A relaxed CamelCase fragment can also be followed by uppercase characters. 
-    let l:camelCaseRelaxedFragments = map(copy(l:camelCaseAnchors), 'v:val . ''\%(_\@!\k\)\*''')
+    " A relaxed CamelCase fragment can also be followed by uppercase characters
+    " and can swallow underscopes. 
+    let l:camelCaseRelaxedFragments = map(copy(l:camelCaseAnchors), 'v:val . ''\k\*''')
 
     " A strict underscore_word fragment consists of the anchor preceded by
     " underscope(s) (except for the first fragment), followed by keyword
@@ -95,15 +96,15 @@ function! s:CamelCaseComplete( findstart, base )
 	endif
 	let l:base = strpart(getline('.'), l:startCol - 1, (col('.') - l:startCol))
 	let [s:strictRegexp, s:relaxedRegexp] = s:BuildRegexp(l:base)
-echomsg '****' s:strictRegexp
-echomsg '****' s:relaxedRegexp
 	return l:startCol - 1 " Return byte index, not column. 
     elseif ! empty(a:base)
 	" Find keywords matching the prepared regexp. Use the relaxed regexp
 	" when the strict one doesn't yield any matches. 
 	let l:matches = []
+echomsg '****strict ' s:strictRegexp
 	call CompleteHelper#FindMatches( l:matches, s:strictRegexp, {'complete': s:GetCompleteOption()} )
 	if empty(l:matches)
+echomsg '****relaxed' s:relaxedRegexp
 	    call CompleteHelper#FindMatches( l:matches, s:relaxedRegexp, {'complete': s:GetCompleteOption()} )
 	endif
 	return l:matches
