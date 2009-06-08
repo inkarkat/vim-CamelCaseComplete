@@ -1,4 +1,5 @@
-" TODO: summary
+" CamelCaseComplete.vim: Insert mode completion that expands CamelCaseWords and
+" underscore_words based on anchor characters for each word fragment. 
 "
 " DESCRIPTION:
 " USAGE:
@@ -38,14 +39,26 @@ function! s:GetCompleteOption()
     return (exists('b:CamelCaseComplete_complete') ? b:CamelCaseComplete_complete : g:CamelCaseComplete_complete)
 endfunction
 
+function! s:WholeWordMatch( expr )
+    return '\V\<' . a:expr . '\>'
+endfunction
 function! s:BuildRegexp( base )
     " Each character is an anchor for the beginning of a CamelCaseWord. 
     let l:anchors = map(split(a:base, '\zs'), 'escape(v:val, "\\")')
 
-    " We need at least two anchors to be able to match CamelCaseWords or
-    " underscore_words. 
-    if len(l:anchors) < 2
-	return ['', '']
+    " We need at least two anchors to be able to build an exact match for
+    " CamelCaseWords or underscore_words. If we have less than that, build
+    " regexps that match anything resembling CamelCaseWords / underscore_words. 
+    "
+    " Without any anchors, build a regexp that matches any CamelCaseWord or
+    " underscore_word. 
+    if len(l:anchors) == 0
+	return [s:WholeWordMatch('\%(' .
+	\	'\k\*\%(_\@!\k\&\U\)\k\*\u\k\+' .
+	\   '\|' .
+	\	'\k\*\%(_\@!\k\)_\+\%(_\@!\k\)\k\*' .
+	\   '\)'
+	\), '']
     endif
 
     " Each CamelCase anchor except the first one must match an upper case
@@ -56,6 +69,17 @@ function! s:BuildRegexp( base )
     let l:camelCaseAnchors = 
     \	[ (printf('\[%s%s]', tolower(l:anchors[0]), toupper(l:anchors[0]))) ] +
     \	map(l:anchors[1:], '"\\%(" . toupper(v:val) . "\\&\\u\\)"')
+
+    " With just one anchor, build a regexp that matches any CamelCaseWord or
+    " underscore_word starting with the anchor. 
+    if len(l:anchors) == 1
+	return [s:WholeWordMatch('\%(' .
+	\	l:camelCaseAnchors[0] . '\%(_\@!\k\)\*\%(_\@!\k\&\U\)\%(_\@!\k\)\*\u\k\+' .
+	\   '\|' .
+	\	l:anchors[0] . '\k\*\%(_\@!\k\)_\+\%(_\@!\k\)\k\*' .
+	\   '\)'
+	\), '']
+    endif
 
     " A strict CamelCase fragment consists of the CamelCase anchor followed by
     " (optional, to handle ACRONYMS inside a CamelCaseWord) non-uppercase
@@ -95,7 +119,7 @@ function! s:BuildRegexp( base )
 	let l:strictFragmentsRegexp  .= '\%(' . l:camelCaseStrictFragments[l:i]  . '\|' . l:underscoreStrictFragments[l:i]  . '\)'
 	let l:relaxedFragmentsRegexp .= '\%(' . l:camelCaseRelaxedFragments[l:i] . '\|' . l:underscoreRelaxedFragments[l:i] . '\)'
     endfor
-    return ['\V\<' . l:strictFragmentsRegexp . '\>', '\V\<' . l:relaxedFragmentsRegexp . '\>']
+    return [s:WholeWordMatch(l:strictFragmentsRegexp), s:WholeWordMatch(l:relaxedFragmentsRegexp)]
 endfunction
 function! s:CamelCaseComplete( findstart, base )
     if a:findstart
@@ -107,13 +131,13 @@ function! s:CamelCaseComplete( findstart, base )
 	let l:base = strpart(getline('.'), l:startCol - 1, (col('.') - l:startCol))
 	let [s:strictRegexp, s:relaxedRegexp] = s:BuildRegexp(l:base)
 	return l:startCol - 1 " Return byte index, not column. 
-    elseif ! empty(a:base) && ! empty(s:strictRegexp)
+    elseif ! empty(s:strictRegexp)
 	" Find keywords matching the prepared regexp. Use the relaxed regexp
 	" when the strict one doesn't yield any matches. 
 	let l:matches = []
 echomsg '****strict ' s:strictRegexp
 	call CompleteHelper#FindMatches( l:matches, s:strictRegexp, {'complete': s:GetCompleteOption()} )
-	if empty(l:matches)
+	if empty(l:matches) && ! empty(s:relaxedRegexp)
 echomsg '****relaxed' s:relaxedRegexp
 	    call CompleteHelper#FindMatches( l:matches, s:relaxedRegexp, {'complete': s:GetCompleteOption()} )
 	endif
