@@ -58,7 +58,7 @@ function! s:BuildRegexp( base )
 	return [s:WholeWordMatch('\%(' .
 	\	'\k\*\%(_\@!\k\&\U\)\k\*\u\k\+' .
 	\   '\|' .
-	\	'\k\*\%(_\@!\k\)_\+\%(_\@!\k\)\k\*' .
+	\	'_\*\k\*\%(_\@!\k\)_\+\%(_\@!\k\)\k\*' .
 	\   '\)'
 	\), '']
     endif
@@ -73,12 +73,13 @@ function! s:BuildRegexp( base )
     \	map(l:anchors[1:], '"\\%(" . toupper(v:val) . "\\&\\u\\)"')
 
     " With just one anchor, build a regexp that matches any CamelCaseWord or
-    " underscore_word starting with the anchor. 
+    " underscore_word starting with the anchor (possibly preceded by leading
+    " underscore(s)). 
     if len(l:anchors) == 1
 	return [s:WholeWordMatch('\%(' .
 	\	l:camelCaseAnchors[0] . '\%(_\@!\k\)\*\%(_\@!\k\&\U\)\%(_\@!\k\)\*\u\k\+' .
 	\   '\|' .
-	\	l:anchors[0] . '\k\*\%(_\@!\k\)_\+\%(_\@!\k\)\k\*' .
+	\	'_\*' . l:anchors[0] . '\k\*\%(_\@!\k\)_\+\%(_\@!\k\)\k\*' .
 	\   '\)'
 	\), '']
     endif
@@ -102,18 +103,18 @@ function! s:BuildRegexp( base )
     \	map(l:camelCaseAnchors[1:], 'v:val . ''\k\*''')
 
     " A strict underscore_word fragment consists of the anchor preceded by
-    " underscope(s) (except for the first fragment), followed by keyword
-    " characters without '_'. To match, the first fragment must be followed by
-    " underscore(s); otherwise, this would swallow arbitrary text at the
-    " beginning of a CamelCaseWord. 
+    " underscore(s) (except for the first fragment, where any preceding
+    " underscore(s) are optional), followed by keyword characters without '_'.
+    " To match, the first fragment must be followed by underscore(s); otherwise,
+    " this would swallow arbitrary text at the beginning of a CamelCaseWord. 
     let l:underscoreStrictFragments =
-    \	[l:anchors[0] . '\%(_\@!\k\)\+_\@='] +
+    \	['_\*' . l:anchors[0] . '\%(_\@!\k\)\+_\@='] +
     \	map(l:anchors[1:], '"_\\+" . v:val . ''\%(_\@!\k\)\+''')
 
     " A relaxed underscore_word fragment can also swallow underscores for which
     " no anchor was provided. 
     let l:underscoreRelaxedFragments =
-    \	[l:anchors[0] . '\k\+_\@='] +
+    \	['_\*' . l:anchors[0] . '\k\+_\@='] +
     \	map(l:anchors[1:], '"_\\+" . v:val . ''\k\+''')
 
     " Assemble all fragments together to build the full regexp. 
