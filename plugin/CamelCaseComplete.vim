@@ -42,6 +42,12 @@ function! s:BuildRegexp( base )
     " Each character is an anchor for the beginning of a CamelCaseWord. 
     let l:anchors = map(split(a:base, '\zs'), 'escape(v:val, "\\")')
 
+    " We need at least two anchors to be able to match CamelCaseWords or
+    " underscore_words. 
+    if len(l:anchors) < 2
+	return ['', '']
+    endif
+
     " Each CamelCase anchor except the first one must match an upper case
     " character; the CamelCaseWord may start with either lower or upper case. 
     " Note: We cannot simply use toupper(); 'ignorecase' may suspend this
@@ -53,8 +59,12 @@ function! s:BuildRegexp( base )
 
     " A strict CamelCase fragment consists of the CamelCase anchor followed by
     " (optional, to handle ACRONYMS inside a CamelCaseWord) non-uppercase
-    " keyword characters without '_'. 
-    let l:camelCaseStrictFragments = map(copy(l:camelCaseAnchors), 'v:val . ''\%(_\@!\k\&\U\)\*''')
+    " keyword characters without '_'. To match, the first fragment must be
+    " followed by an upper case character; otherwise, this would make the
+    " match at the beginning of a underscore_word always case insensitive. 
+    let l:camelCaseStrictFragments =
+    \	[l:camelCaseAnchors[0] . '\%(_\@!\k\&\U\)\*\u\@='] +
+    \	map(l:camelCaseAnchors[1:], 'v:val . ''\%(_\@!\k\&\U\)\*''')
 
     " A relaxed CamelCase fragment can also be followed by uppercase characters
     " and can swallow underscopes. 
@@ -97,7 +107,7 @@ function! s:CamelCaseComplete( findstart, base )
 	let l:base = strpart(getline('.'), l:startCol - 1, (col('.') - l:startCol))
 	let [s:strictRegexp, s:relaxedRegexp] = s:BuildRegexp(l:base)
 	return l:startCol - 1 " Return byte index, not column. 
-    elseif ! empty(a:base)
+    elseif ! empty(a:base) && ! empty(s:strictRegexp)
 	" Find keywords matching the prepared regexp. Use the relaxed regexp
 	" when the strict one doesn't yield any matches. 
 	let l:matches = []
