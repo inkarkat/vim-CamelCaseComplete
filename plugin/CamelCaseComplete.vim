@@ -158,8 +158,16 @@ function! s:CamelCaseComplete( findstart, base )
     endif
 endfunction
 
-imap <C-c> <Nop>
-inoremap <C-x><C-c> <C-o>:set completefunc=<SID>CamelCaseComplete<CR><C-x><C-u>
+inoremap <Plug>LongestComplete <C-o>:set completefunc=<SID>CamelCaseComplete<CR><C-x><C-u>
+if ! hasmapto('<Plug>LongestComplete', 'i')
+    if empty(maparg("\<C-c>", 'i'))
+	" The i_CTRL-C command quits insert mode; it seems this even happens
+	" when <C-c> is part of a mapping. To avoid this, the <C-c> command is
+	" turned off here (unless it has already been remapped elsewhere). 
+	inoremap <C-c> <Nop>
+    endif
+    imap <C-x><C-c> <Plug>LongestComplete
+endif
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
