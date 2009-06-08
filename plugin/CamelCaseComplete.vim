@@ -142,10 +142,13 @@ function! s:CamelCaseComplete( findstart, base )
 	" Find keywords matching the prepared regexp. Use the relaxed regexp
 	" when the strict one doesn't yield any matches. 
 	let l:matches = []
-echomsg '****strict ' s:strictRegexp
+"****D echomsg '****strict ' s:strictRegexp
 	call CompleteHelper#FindMatches( l:matches, s:strictRegexp, {'complete': s:GetCompleteOption()} )
 	if empty(l:matches) && ! empty(s:relaxedRegexp)
-echomsg '****relaxed' s:relaxedRegexp
+"****D echomsg '****relaxed' s:relaxedRegexp
+	    echohl ModeMsg
+	    echo '-- User defined completion (^U^N^P) -- Relaxed search...'
+	    echohl None
 	    call CompleteHelper#FindMatches( l:matches, s:relaxedRegexp, {'complete': s:GetCompleteOption()} )
 	endif
 	return l:matches
@@ -155,6 +158,7 @@ echomsg '****relaxed' s:relaxedRegexp
     endif
 endfunction
 
+imap <C-c> <Nop>
 inoremap <C-x><C-c> <C-o>:set completefunc=<SID>CamelCaseComplete<CR><C-x><C-u>
 
 let &cpo = s:save_cpo
