@@ -14,12 +14,14 @@
 " KNOWN PROBLEMS:
 " TODO:
 "
-" Copyright: (C) 2008 by Ingo Karkat
+" Copyright: (C) 2009 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	002	09-Jun-2009	BF: First relaxed CamelCase fragment must not
+"				swallow underscores. 
 "	001	08-Jun-2009	file creation
 
 " Avoid installing twice or when in unsupported Vim version. 
@@ -91,8 +93,13 @@ function! s:BuildRegexp( base )
     \	map(l:camelCaseAnchors[1:], 'v:val . ''\%(_\@!\k\&\U\)\*''')
 
     " A relaxed CamelCase fragment can also be followed by uppercase characters
-    " and can swallow underscopes. 
-    let l:camelCaseRelaxedFragments = map(copy(l:camelCaseAnchors), 'v:val . ''\k\*''')
+    " and can swallow underscores. To match, the first fragment must not contain
+    " underscores and be followed by an upper case character; otherwise, this
+    " would make the match at the beginning of a underscore_word always case
+    " insensitive.
+    let l:camelCaseRelaxedFragments =
+    \	[l:camelCaseAnchors[0] . '\%(_\@!\k\)\*\u\@='] +
+    \	map(l:camelCaseAnchors[1:], 'v:val . ''\k\*''')
 
     " A strict underscore_word fragment consists of the anchor preceded by
     " underscope(s) (except for the first fragment), followed by keyword
