@@ -2,7 +2,39 @@
 " underscore_words based on anchor characters for each word fragment. 
 "
 " DESCRIPTION:
+"   This plugin offers a keyword completion that is limited to identifiers which
+"   adhere to either CamelCase ("anIdentifier") or underscore_notation
+"   ("an_identifier") naming conventions. This often results in a single (or
+"   very few) matches and thus allows quick completion of function, class and
+"   variable names.
+"   The list of completion candidates can be restricted by triggering completion
+"   on all or some of the initial letters of each word fragment; e.g. "vlcn"
+"   would expand to "VeryLongClassName" and "verbose_latitude_correction_numeric".
+"
 " USAGE:
+" i_CTRL-X_CTRL-C	Find matches for CamelCaseWords and underscore_words
+"			whose individual word fragments begin with the typed
+"			letters in front of the cursor. 
+"
+"   The initial letter of the first fragment must always be included; initial
+"   letters of subsequent fragments can, but need not be specified. If there are
+"   matches where each fragment starts with one typed letter (e.g. "jaev" ->
+"   "justAnExampleVar"), only those strict matches are offered. Otherwise, a
+"   relaxed search for completions will also include matches where some
+"   fragments have no representation in the typed letters (e.g. "je" ->
+"   "justAnExampleVar"). In short: Type all initial letters for a precise and
+"   narrow completion, or just a few initial letters (but always the first!)
+"   when there are too many fragments (e.g. "avl" ->
+"   "aVeryLongVarWithTooManyFragments") or the match is non-ambiguous, anyway
+"   (e.g. "xz" -> "xVariableUsedForZipping"). 
+"
+"   The search for completions honors the 'ignorecase' and 'smartcase' settings
+"   for underscore_words. Without 'ignorecase', "ai" will only match
+"   "an_identifier" and "AI" -> "AN_Identifier". Case doesn't matter for
+"   CamelCaseWords, the first fragment can start with either lower or upper
+"   case; all subsequent fragments must start with an upper case letter. Thus,
+"   you do not need to type "aCCW" to get "aCamelCaseWord"; "accw" will do, too. 
+"
 " INSTALLATION:
 " DEPENDENCIES:
 "   - CompleteHelper.vim autoload script. 
@@ -58,7 +90,7 @@ function! s:BuildRegexp( base )
 	return [s:WholeWordMatch('\%(' .
 	\	'\k\*\%(_\@!\k\&\U\)\k\*\u\k\+' .
 	\   '\|' .
-	\	'_\*\k\*\%(_\@!\k\)_\+\%(_\@!\k\)\k\*' .
+	\	'_\*\k\*\%(_\@!\k\)_\+\%(_\@!\k\)\%(\k\|_\)\*' .
 	\   '\)'
 	\), '']
     endif
@@ -79,7 +111,7 @@ function! s:BuildRegexp( base )
 	return [s:WholeWordMatch('\%(' .
 	\	l:camelCaseAnchors[0] . '\%(_\@!\k\)\*\%(_\@!\k\&\U\)\%(_\@!\k\)\*\u\k\+' .
 	\   '\|' .
-	\	'_\*' . l:anchors[0] . '\k\*\%(_\@!\k\)_\+\%(_\@!\k\)\k\*' .
+	\	'_\*' . l:anchors[0] . '\k\*\%(_\@!\k\)_\+\%(_\@!\k\)\%(\k\|_\)\*' .
 	\   '\)'
 	\), '']
     endif
@@ -159,15 +191,15 @@ function! s:CamelCaseComplete( findstart, base )
     endif
 endfunction
 
-inoremap <Plug>LongestComplete <C-o>:set completefunc=<SID>CamelCaseComplete<CR><C-x><C-u>
-if ! hasmapto('<Plug>LongestComplete', 'i')
+inoremap <Plug>CamelCaseComplete <C-o>:set completefunc=<SID>CamelCaseComplete<CR><C-x><C-u>
+if ! hasmapto('<Plug>CamelCaseComplete', 'i')
     if empty(maparg("\<C-c>", 'i'))
 	" The i_CTRL-C command quits insert mode; it seems this even happens
 	" when <C-c> is part of a mapping. To avoid this, the <C-c> command is
 	" turned off here (unless it has already been remapped elsewhere). 
 	inoremap <C-c> <Nop>
     endif
-    imap <C-x><C-c> <Plug>LongestComplete
+    imap <C-x><C-c> <Plug>CamelCaseComplete
 endif
 
 let &cpo = s:save_cpo
