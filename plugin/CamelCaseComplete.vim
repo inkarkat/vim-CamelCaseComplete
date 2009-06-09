@@ -120,12 +120,13 @@ function! s:BuildRegexpFragments( anchors )
     endif
 
     " A strict CamelCase fragment consists of the CamelCase anchor followed by
-    " non-uppercase keyword characters without '_', or a sequence of upper case
-    " characters (to handle ACRONYMS). To match, the first fragment must be
-    " followed by an upper case character; otherwise, this would make the
-    " match at the beginning of a underscore_word always case insensitive. 
+    " non-uppercase keyword characters without '_', or the upper case anchor
+    " followed by a sequence of upper case characters (to handle ACRONYMS). To
+    " match, the first fragment must be followed by an upper case character;
+    " otherwise, this would make the match at the beginning of a underscore_word
+    " always case insensitive. 
     let l:camelCaseStrictFragments =
-    \	[l:camelCaseAnchors[0] . '\%(\%(_\@!\k\&\U\)\+\|\u\+\)\u\@='] +
+    \	['\%(' . l:camelCaseAnchors[0] . '\%(_\@!\k\&\U\)\+\u\@=\|\%(' . toupper(a:anchors[0]) . '\&\u\)\u\+\)'] +
     \	map(l:camelCaseAnchors[1:], 'v:val . ''\%(\%(_\@!\k\&\U\)\+\|\u\+\)''')
 
     " A relaxed CamelCase fragment can also be followed by uppercase characters
