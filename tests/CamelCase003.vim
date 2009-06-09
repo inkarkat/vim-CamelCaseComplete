@@ -3,7 +3,7 @@
 runtime plugin/CamelCaseComplete.vim
 source helpers/completetest.vim
 call vimtest#StartTap()
-call vimtap#Plan(15) 
+call vimtap#Plan(18) 
 edit CamelCaseComplete.txt
 
 call SetCompletion("\<C-x>\<C-c>")
@@ -12,8 +12,11 @@ call IsMatchesInIsolatedLine('iicc', ['identifierInCamelCase'], 'single CamelCas
 call IsMatchesInIsolatedLine('IICC', ['identifierInCamelCase'], 'single CamelCase strict match with IICC')
 call IsMatchesInIsolatedLine('IiCc', ['identifierInCamelCase'], 'single CamelCase strict match with IiCc')
 
-call IsMatchesInIsolatedLine('masr', ['myACNSubscriptionRenewal', 'myAmbiguousLittleSpecialCommandInReality'], 'relaxed match for masr')
-call IsMatchesInIsolatedLine('macnsr', ['myACNSubscriptionRenewal'], 'strict match for macnsr')
+call IsMatchesInIsolatedLine('masr', ['myACNSubscriptionRenewal'], 'strict match for masr')
+call IsMatchesInIsolatedLine('macnsr', [], 'no match when spelling out acronym for macnsr')
+call IsMatchesInIsolatedLine('mansr', [], 'no match inside acronym for mansr')
+call IsMatchesInIsolatedLine('msr', ['myACNSubscriptionRenewal', 'myAmbiguousLittleSpecialCommandInReality'], 'relaxed match for msr')
+call IsMatchesInIsolatedLine('mr', ['MaP1Roblem', 'MapPPPP123Roblem', 'myACNSubscriptionRenewal', 'myAmbiguousLittleSpecialCommandInReality'], 'relaxed match for mr')
 
 call IsMatchesInIsolatedLine('V', ['virtCol', 'VirtColStrFromStart', 'VirtColStrFromEnd'], 'single-anchor match for V')
 call IsMatchesInIsolatedLine('b', ['BadCodeName', 'bad_code_name', 'bad_CODE_NAME'], 'single-anchor match for b')
