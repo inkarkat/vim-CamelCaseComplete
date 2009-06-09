@@ -52,6 +52,11 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	003	10-Jun-2009	BF: ACRONYMs inside CamelCaseWords are now
+"				included in strict matches, not relaxed. 
+"				BF: Relaxed CamelCase match does not match
+"				anchor inside ACRONYMS, only at the beginning of
+"				a fragment. 
 "	002	09-Jun-2009	BF: First relaxed CamelCase fragment must not
 "				swallow underscores. 
 "	001	08-Jun-2009	file creation
@@ -117,22 +122,24 @@ function! s:BuildRegexp( base )
     endif
 
     " A strict CamelCase fragment consists of the CamelCase anchor followed by
-    " (optional, to handle ACRONYMS inside a CamelCaseWord) non-uppercase
-    " keyword characters without '_'. To match, the first fragment must be
+    " non-uppercase keyword characters without '_', or a sequence of upper case
+    " characters (to handle ACRONYMS). To match, the first fragment must be
     " followed by an upper case character; otherwise, this would make the
     " match at the beginning of a underscore_word always case insensitive. 
     let l:camelCaseStrictFragments =
-    \	[l:camelCaseAnchors[0] . '\%(_\@!\k\&\U\)\*\u\@='] +
-    \	map(l:camelCaseAnchors[1:], 'v:val . ''\%(_\@!\k\&\U\)\*''')
+    \	[l:camelCaseAnchors[0] . '\%(\%(_\@!\k\&\U\)\+\|\u\+\)\u\@='] +
+    \	map(l:camelCaseAnchors[1:], 'v:val . ''\%(\%(_\@!\k\&\U\)\+\|\u\+\)''')
 
     " A relaxed CamelCase fragment can also be followed by uppercase characters
-    " and can swallow underscores. To match, the first fragment must not contain
-    " underscores and be followed by an upper case character; otherwise, this
-    " would make the match at the beginning of a underscore_word always case
-    " insensitive.
+    " and can swallow underscores. No uppercase character must precede this
+    " fragment or the anchor must be followed by a lowercase character to avoid
+    " that anything inside an ACRONYM matches. To match, the first fragment must
+    " not contain underscores and be followed by an upper case character;
+    " otherwise, this would make the match at the beginning of a underscore_word
+    " always case insensitive.
     let l:camelCaseRelaxedFragments =
     \	[l:camelCaseAnchors[0] . '\%(_\@!\k\)\*\u\@='] +
-    \	map(l:camelCaseAnchors[1:], 'v:val . ''\k\*''')
+    \	map(l:camelCaseAnchors[1:], '''\%(\U\@<='' . v:val . ''\k\*\|'' . v:val . ''\l\k\*\)''')
 
     " A strict underscore_word fragment consists of the anchor preceded by
     " underscore(s) (except for the first fragment, where any preceding
@@ -175,10 +182,10 @@ function! s:CamelCaseComplete( findstart, base )
 	" Find keywords matching the prepared regexp. Use the relaxed regexp
 	" when the strict one doesn't yield any matches. 
 	let l:matches = []
-"****D echomsg '****strict ' s:strictRegexp
+echomsg '****strict ' s:strictRegexp
 	call CompleteHelper#FindMatches( l:matches, s:strictRegexp, {'complete': s:GetCompleteOption()} )
 	if empty(l:matches) && ! empty(s:relaxedRegexp)
-"****D echomsg '****relaxed' s:relaxedRegexp
+echomsg '****relaxed' s:relaxedRegexp
 	    echohl ModeMsg
 	    echo '-- User defined completion (^U^N^P) -- Relaxed search...'
 	    echohl None
