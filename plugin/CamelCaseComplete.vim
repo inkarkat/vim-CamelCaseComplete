@@ -57,6 +57,10 @@
 "				BF: Relaxed CamelCase match does not match
 "				anchor inside ACRONYMS, only at the beginning of
 "				a fragment. 
+"				BF: Anchor must not match inside ACRONYM, so
+"				check that characters following the strict
+"				CamelCase fragment do not belong to the same
+"				ACRONYM. 
 "	002	09-Jun-2009	BF: First relaxed CamelCase fragment must not
 "				swallow underscores. 
 "	001	08-Jun-2009	file creation
@@ -123,22 +127,23 @@ function! s:BuildRegexpFragments( anchors )
     " non-uppercase keyword characters without '_', or the upper case anchor
     " followed by a sequence of upper case characters (to handle ACRONYMS); this
     " must not be followed by two (or more) uppercase characters, or the ACRONYM
-    " would not yet have ended. (One following uppercase character is (probably)
-    " okay, it is (hopefully) the beginning of the next CamelCase fragment.) To
-    " match, the first fragment must be followed by an upper case character;
+    " would not yet have ended. (One following uppercase character is okay, as
+    " long as the keyword doesn't end there, it is then the beginning of the
+    " next CamelCase fragment.)
+    " To match, the first fragment must be followed by an upper case character;
     " otherwise, this would make the match at the beginning of a underscore_word
     " always case insensitive. 
     let l:camelCaseStrictFragments =
-    \	['\%(' . l:camelCaseAnchors[0] . '\%(_\@!\k\&\U\)\+\u\@=\|\%(' . toupper(a:anchors[0]) . '\&\u\)\u\+\%(\u\u\)\@!\)'] +
-    \	map(l:camelCaseAnchors[1:], 'v:val . ''\%(\%(_\@!\k\&\U\)\+\|\u\+\%(\u\u\)\@!\)''')
+    \	['\%(' . l:camelCaseAnchors[0] . '\%(_\@!\k\&\U\)\+\u\@=\|\%(' . toupper(a:anchors[0]) . '\&\u\)\u\+\%(\u\u\|\u\>\)\@!\)'] +
+    \	map(l:camelCaseAnchors[1:], 'v:val . ''\%(\%(_\@!\k\&\U\)\+\|\u\+\%(\u\u\|\u\>\)\@!\)''')
 
     " A relaxed CamelCase fragment can also be followed by uppercase characters
     " and can swallow underscores. No uppercase character must precede this
     " fragment or the anchor must be followed by a lowercase character to avoid
-    " that anything inside an ACRONYM matches. To match, the first fragment must
-    " not contain underscores and be followed by an upper case character;
-    " otherwise, this would make the match at the beginning of a underscore_word
-    " always case insensitive.
+    " that anything inside an ACRONYM matches.
+    " To match, the first fragment must not contain underscores and be followed
+    " by an upper case character; otherwise, this would make the match at the
+    " beginning of a underscore_word always case insensitive.
     let l:camelCaseRelaxedFragments =
     \	[l:camelCaseAnchors[0] . '\%(_\@!\k\)\*\u\@='] +
     \	map(l:camelCaseAnchors[1:], '''\%(\U\@<='' . v:val . ''\k\*\|'' . v:val . ''\l\k\*\)''')
