@@ -78,33 +78,22 @@ function! s:GetCompleteOption()
     return (exists('b:CamelCaseComplete_complete') ? b:CamelCaseComplete_complete : g:CamelCaseComplete_complete)
 endfunction
 
-function! s:WholeWordMatch( expr )
-    return '\V\<' . a:expr . '\>'
-endfunction
-function! s:InsertNonKeywordAnchor( anchor, anchorRegexp, alphaRegexp )
-    if a:anchor =~# '^\a$'
-	return substitute(a:alphaRegexp, 'v:val', escape(a:anchorRegexp, '\'.(&magic ? '&' : '')), 'g')
-    else
-	return ''
-    endif
-endfunction
-function! s:BuildRegexp( base )
-    " Each character is an anchor for the beginning of a CamelCaseWord. 
-    let l:anchors = map(split(a:base, '\zs'), 'escape(v:val, "\\")')
-
+function! s:BuildRegexpFragments( anchors )
     " We need at least two anchors to be able to build an exact match for
     " CamelCaseWords or underscore_words. If we have less than that, build
     " regexps that match anything resembling CamelCaseWords / underscore_words. 
     "
     " Without any anchors, build a regexp that matches any CamelCaseWord or
     " underscore_word. 
-    if len(l:anchors) == 0
-	return [s:WholeWordMatch('\%(' .
+    if len(a:anchors) == 0
+	return [
+	\   ['\%(' .
 	\	'\k\*\%(_\@!\k\&\U\)\k\*\u\k\+' .
 	\   '\|' .
 	\	'_\*\k\*\%(_\@!\k\)_\+\%(_\@!\k\)\%(\k\|_\)\*' .
-	\   '\)'
-	\), '']
+	\   '\)'],
+	\   []
+	\]
     endif
 
     " Each CamelCase anchor except the first one must match an upper case
@@ -113,19 +102,21 @@ function! s:BuildRegexp( base )
     " distinction. We also cannot force case sensitivity via /\C/, because that
     " would apply to the entire pattern and thus also to the underscore_words. 
     let l:camelCaseAnchors = 
-    \	[ (printf('\[%s%s]', tolower(l:anchors[0]), toupper(l:anchors[0]))) ] +
-    \	map(l:anchors[1:], '"\\%(" . toupper(v:val) . "\\&\\u\\)"')
+    \	[ (printf('\[%s%s]', tolower(a:anchors[0]), toupper(a:anchors[0]))) ] +
+    \	map(a:anchors[1:], '"\\%(" . toupper(v:val) . "\\&\\u\\)"')
 
     " With just one anchor, build a regexp that matches any CamelCaseWord or
     " underscore_word starting with the anchor (possibly preceded by leading
     " underscore(s)). 
-    if len(l:anchors) == 1
-	return [s:WholeWordMatch('\%(' .
+    if len(a:anchors) == 1
+	return [
+	\   ['\%(' .
 	\	l:camelCaseAnchors[0] . '\%(_\@!\k\)\*\%(_\@!\k\&\U\)\%(_\@!\k\)\*\u\k\+' .
 	\   '\|' .
-	\	'_\*' . l:anchors[0] . '\k\*\%(_\@!\k\)_\+\%(_\@!\k\)\%(\k\|_\)\*' .
-	\   '\)'
-	\), '']
+	\	'_\*' . a:anchors[0] . '\k\*\%(_\@!\k\)_\+\%(_\@!\k\)\%(\k\|_\)\*' .
+	\   '\)'],
+	\   []
+	\]
     endif
 
     " A strict CamelCase fragment consists of the CamelCase anchor followed by
@@ -133,10 +124,9 @@ function! s:BuildRegexp( base )
     " characters (to handle ACRONYMS). To match, the first fragment must be
     " followed by an upper case character; otherwise, this would make the
     " match at the beginning of a underscore_word always case insensitive. 
-    let l:camelCaseStrictFragments = [l:camelCaseAnchors[0] . '\%(\%(_\@!\k\&\U\)\+\|\u\+\)\u\@=']
-    for l:i in range(1, len(l:anchors) - 1)
-    	call add(l:camelCaseStrictFragments, s:InsertNonKeywordAnchor(l:anchors[l:i], l:camelCaseAnchors[l:i], 'v:val\%(\%(_\@!\k\&\U\)\+\|\u\+\)'))
-    endfor
+    let l:camelCaseStrictFragments =
+    \	[l:camelCaseAnchors[0] . '\%(\%(_\@!\k\&\U\)\+\|\u\+\)\u\@='] +
+    \	map(l:camelCaseAnchors[1:], 'v:val . ''\%(\%(_\@!\k\&\U\)\+\|\u\+\)''')
 
     " A relaxed CamelCase fragment can also be followed by uppercase characters
     " and can swallow underscores. No uppercase character must precede this
@@ -145,39 +135,57 @@ function! s:BuildRegexp( base )
     " not contain underscores and be followed by an upper case character;
     " otherwise, this would make the match at the beginning of a underscore_word
     " always case insensitive.
-    let l:camelCaseRelaxedFragments = [l:camelCaseAnchors[0] . '\%(_\@!\k\)\*\u\@=']
-    for l:i in range(1, len(l:anchors) - 1)
-	call add(l:camelCaseRelaxedFragments, s:InsertNonKeywordAnchor(l:anchors[l:i], l:camelCaseAnchors[l:i], '\%(\U\@<=v:val\k\*\|v:val\l\k\*\)'))
-    endfor
+    let l:camelCaseRelaxedFragments =
+    \	[l:camelCaseAnchors[0] . '\%(_\@!\k\)\*\u\@='] +
+    \	map(l:camelCaseAnchors[1:], '''\%(\U\@<='' . v:val . ''\k\*\|'' . v:val . ''\l\k\*\)''')
 
     " A strict underscore_word fragment consists of the anchor preceded by
     " underscore(s) (except for the first fragment, where any preceding
     " underscore(s) are optional), followed by keyword characters without '_'.
     " To match, the first fragment must be followed by underscore(s); otherwise,
     " this would swallow arbitrary text at the beginning of a CamelCaseWord. 
-    let l:underscoreStrictFragments = ['_\*' . l:anchors[0] . '\%(_\@!\k\)\+_\@=']
-    for l:i in range(1, len(l:anchors) - 1)
-	call add(l:underscoreStrictFragments, s:InsertNonKeywordAnchor(l:anchors[l:i], l:anchors[l:i], '_\+v:val\%(_\@!\k\)\+'))
-    endfor
+    let l:underscoreStrictFragments =
+    \	['_\*' . a:anchors[0] . '\%(_\@!\k\)\+_\@='] +
+    \	map(a:anchors[1:], '"_\\+" . v:val . ''\%(_\@!\k\)\+''')
 
     " A relaxed underscore_word fragment can also swallow underscores for which
     " no anchor was provided. 
-    let l:underscoreRelaxedFragments = ['_\*' . l:anchors[0] . '\k\+_\@=']
-    for l:i in range(1, len(l:anchors) - 1)
-	call add(l:underscoreRelaxedFragments, s:InsertNonKeywordAnchor(l:anchors[l:i], l:anchors[l:i], '_\+v:val\k\+'))
-    endfor
+    let l:underscoreRelaxedFragments =
+    \	['_\*' . a:anchors[0] . '\k\+_\@='] +
+    \	map(a:anchors[1:], '"_\\+" . v:val . ''\k\+''')
 
-    " Assemble all fragments together to build the full regexp. 
     " Each fragment must match either one part of a CamelCaseWord or
     " underscore_word. This way, combined CamelCase_with_underScoreWords can
     " also be matched. 
-    let l:strictFragmentsRegexp = ''
-    let l:relaxedFragmentsRegexp = ''
-    for l:i in range(len(l:anchors))
-	let l:strictFragmentsRegexp  .= '\%(' . l:camelCaseStrictFragments[l:i]  . '\|' . l:underscoreStrictFragments[l:i]  . '\)'
-	let l:relaxedFragmentsRegexp .= '\%(' . l:camelCaseRelaxedFragments[l:i] . '\|' . l:underscoreRelaxedFragments[l:i] . '\)'
+    let l:strictRegexpFragments = []
+    let l:relaxedRegexpFragments = []
+    for l:i in range(len(a:anchors))
+	call add(l:strictRegexpFragments, '\%(' . l:camelCaseStrictFragments[l:i]  . '\|' . l:underscoreStrictFragments[l:i]  . '\)')
+	call add(l:relaxedRegexpFragments, '\%(' . l:camelCaseRelaxedFragments[l:i] . '\|' . l:underscoreRelaxedFragments[l:i] . '\)')
     endfor
-    return [s:WholeWordMatch(l:strictFragmentsRegexp), s:WholeWordMatch(l:relaxedFragmentsRegexp)]
+    return [l:strictRegexpFragments, l:relaxedRegexpFragments]
+endfunction
+function! s:WholeWordMatch( expr )
+    return '\V\<' . a:expr . '\>'
+endfunction
+function! s:BuildRegexp( base )
+    " Each character is an anchor for the beginning of a CamelCaseWord. 
+    let l:anchors = map(split(a:base, '\zs'), 'escape(v:val, "\\")')
+
+    let [l:strictRegexpFragments, l:relaxedRegexpFragments] = s:BuildRegexpFragments(l:anchors)
+
+    " Each anchor results in one fragment; there still is one fragment when
+    " there are no anchors. 
+    let l:fragmentsNum = (len(l:anchors) == 0 ? 1 : len(l:anchors))
+
+    " Assemble all regexp fragments together to build the full regexp. 
+    let l:strictRegexp = ''
+    let l:relaxedRegexp = ''
+    for l:i in range(l:fragmentsNum)
+	let l:strictRegexp  .= get(l:strictRegexpFragments,  l:i, '')
+	let l:relaxedRegexp .= get(l:relaxedRegexpFragments, l:i, '')
+    endfor
+    return [s:WholeWordMatch(l:strictRegexp), s:WholeWordMatch(l:relaxedRegexp)]
 endfunction
 function! s:CamelCaseComplete( findstart, base )
     if a:findstart
