@@ -26,12 +26,10 @@ call IsMatchesInIsolatedLine('ob', ['_or_both_'], 'match for starting and ending
 call IsMatchesInIsolatedLine('o', ['_or_both_'], 'single-anchor match starting and ending with underscore')
 
 call IsMatchesInIsolatedLine('msu', ['multiple__subsequent____underscores'], 'match for multiple subsequent underscores')
-call IsMatchesInIsolatedLine('msue', ['__mul__sub__und__everywhere__'], 'match for multiple subsequent underscores')
-
+call IsMatchesInIsolatedLine('msue', ['__mul__sub__und__everywhere__'], 'match for multiple subsequent underscores starting and ending')
 
 " Perform the no-anchor completions on a minimal set of completion candidates. 
 %g!/^MINIMAL:/d
-
 call IsMatchesInIsolatedLine('', ['identifierInCamelCase', 'jdentifierJnCamelCase', 'preferring_underscore_words', 'qreferring_underscore_xords', '_starting_with_underscore', 'ending_with_underscore_', '_or_both_'], 'no-anchor matches')
 
 call vimtest#Quit()
