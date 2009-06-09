@@ -1,0 +1,63 @@
+"   Given the following CamelCase identifiers in a source code fragment:
+"	set Script31337PathAndNameWithoutExtension11=%~dpn0
+"	set Script31337PathANDNameWITHOUTExtension11=%~dpn0
+"   and the corresponding identifiers in underscore_notation:
+"	set script_31337_path_and_name_without_extension_11=%~dpn0
+"	set SCRIPT_31337_PATH_AND_NAME_WITHOUT_EXTENSION_11=%~dpn0
+" 
+" The well-known MapPPPP123Roblem or MaP1Roblem is there. 
+" CamelCaseWordAtTheEndOfLine
+" underscore_word_at_the_END_OF_LINE
+" CamelCase_Word Script_31337Path_AndName_AND_WithoutExtension11_FOO_FooBar foo
+
+" anycrazyname or anothercodename
+" anyCrazyName or anotherCodeName, but not AnotherCodeName neither BadCodeName. 
+" thatCrazyName or camelCodeName, but not CamelCodeName neither BadCodeName. 
+" any_crazy_name or another_code_name, but not another_code_name neither bad_code_name. 
+" this_crazy_name or underscore_code_name, but not underscore_code_name neither bad_code_name. 
+" this_Crazy_Name or underscore_Code_Name, but not underscore_CODE_NAME neither bad_CODE_NAME. 
+" this_CRAZY_NAME or underscore_CODE_NAME, but not underscore_CODE_NAME neither BAD_CODE_NAME. 
+
+call s:FindMatchesInCurrentWindow( a:matches, a:pattern, {}, a:options )
+call s:FindMatchesInOtherWindows( a:matches, a:pattern, a:options ) 
+
+let g:IndentConsistencyCop_highlighting = 'sglmf:3'
+let g:IndentConsistencyCop_non_indent_pattern = ' \*[*/ \t]'
+let g:IndentConsistencyCop_nonIndentPattern = ' \*[*/ \t]'
+
+function! s:GetVirtStartColOfCurrentCharacter( lineNum, column )
+function! s:GetVirtColOfCurrentCharacter( lineNum, column )
+function! s:GetVirtColOfNextCharacter( lineNum, column )
+function! s:GetCharacter( line, column )
+function! s:GetTabReplacement( column, tabstop )
+function! s:IsMoreToRead( column )
+function! s:IsInside( startCol, endCol, column )
+function! s:GetAdditionalHighlightGroup( column )
+function! s:GetHighlighting( line, column )
+function! EchoLine#EchoLinePart( lineNum, startCol, endCol, maxLength, additionalHighlighting )
+function! EchoLine#EchoLine( lineNum, centerCol, prefix, additionalHighlighting)
+function! EchoWithoutScrolling#MaxLength()
+function! s:ReverseStr( expr )
+function! s:HasMoreThanVirtCol( expr, virtCol )
+function! EchoWithoutScrolling#DetermineVirtColNum( expr )
+function! s:VirtColStrFromStart( expr, virtCol )
+function! s:VirtColStrFromEnd( expr, virtCol )
+function! EchoWithoutScrolling#GetTabReplacement( column, tabstop )
+function! EchoWithoutScrolling#RenderTabs( text, tabstop, startColumn )
+function! EchoWithoutScrolling#TruncateTo( text, length )
+function! EchoWithoutScrolling#Truncate( text, ... )
+function! EchoWithoutScrolling#Echo( text )
+function! EchoWithoutScrolling#EchoWithHl( highlightGroup, text )
+function! EchoWithoutScrolling#EchoMsg( text )
+function! EchoWithoutScrolling#EchoMsgWithHl( highlightGroup, text )
+function! EchoWithoutScrolling#TranslateLineBreaks( text )
+
+MINIMAL: An identifierInCamelCase or preferring_underscore_words?
+MINIMAL: An jdentifierJnCamelCase or qreferring_underscore_xords?
+
+myACNSubscriptionRenewal, EscapedJDBCString
+myAmbiguousLittleSpecialCommandInReality
+
+MINIMAL: _starting_with_underscore, ending_with_underscore_, _or_both_
+multiple__subsequent____underscores __mul__sub__und__everywhere__
+
