@@ -52,6 +52,11 @@ function! EchoWithoutScrolling#EchoMsg( text )
 function! EchoWithoutScrolling#EchoMsgWithHl( highlightGroup, text )
 function! EchoWithoutScrolling#TranslateLineBreaks( text )
 
+MyWorldIn::Spanish MyWorldIn::Turkey
+@Ola!TiggleMe:TaggleMe:ToggleMe
+@HeyHo!TiggleMe:TaggleMe:ToggleMe @HeyHo!TickMeTockMeTuckMe
+@HeyHo!Tiggle_Me:Taggle_Me:Toggle_Me @HeyHo!Tick_Me_Tock_Me_Tuck_Me
+
 MINIMAL: An identifierInCamelCase or preferring_underscore_words?
 MINIMAL: An jdentifierJnCamelCase or qreferring_underscore_xords?
 
@@ -60,4 +65,7 @@ myAmbiguousLittleSpecialCommandInReality
 
 MINIMAL: _starting_with_underscore, ending_with_underscore_, _or_both_
 multiple__subsequent____underscores __mul__sub__und__everywhere__
+
+relaxedRegexp REMARKS
+inRelaxedRegexp inREMARKS
 
