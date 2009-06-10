@@ -10,6 +10,8 @@
 "   The list of completion candidates can be restricted by triggering completion
 "   on all or some of the initial letters of each word fragment; e.g. "vlcn"
 "   would expand to "VeryLongClassName" and "verbose_latitude_correction_numeric".
+"   Non-alphabetic keyword characters can be thrown in, too, to narrow down the
+"   number of matches. 
 "
 " USAGE:
 " i_CTRL-X_CTRL-C	Find matches for CamelCaseWords and underscore_words
@@ -52,6 +54,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	004	11-Jun-2009	Implemented keyword (i.e. non-alphabetic)
+"				anchors. 
 "	003	10-Jun-2009	BF: ACRONYMs inside CamelCaseWords are now
 "				included in strict matches, not relaxed. 
 "				BF: Relaxed CamelCase match does not match
@@ -90,14 +94,13 @@ function! s:BuildAlphabeticRegexpFragments( anchors )
     " Without any anchors, build a regexp that matches any CamelCaseWord or
     " underscore_word. 
     if len(a:anchors) == 0
-	return [
-	\   ['\%(' .
+	let l:anyFragmentRegexp = 
+	\   '\%(' .
 	\	'\k\*\%(_\@!\k\&\U\)\k\*\u\k\+' .
 	\   '\|' .
 	\	'_\*\k\*\%(_\@!\k\)_\+\%(_\@!\k\)\%(\k\|_\)\*' .
-	\   '\)'],
-	\   []
-	\]
+	\   '\)'
+	return [[l:anyFragmentRegexp], [l:anyFragmentRegexp]]
     endif
 
     " Each CamelCase anchor except the first one must match an uppercase
@@ -113,14 +116,13 @@ function! s:BuildAlphabeticRegexpFragments( anchors )
     " underscore_word starting with the anchor (possibly preceded by leading
     " underscore(s)). 
     if len(a:anchors) == 1
-	return [
-	\   ['\%(' .
+	let l:singleAnchorFragmentRegexp = 
+	\   '\%(' .
 	\	l:camelCaseAnchors[0] . '\%(_\@!\k\)\*\%(_\@!\k\&\U\)\%(_\@!\k\)\*\u\k\+' .
 	\   '\|' .
 	\	'_\*' . a:anchors[0] . '\k\*\%(_\@!\k\)_\+\%(_\@!\k\)\%(\k\|_\)\*' .
-	\   '\)'],
-	\   []
-	\]
+	\   '\)'
+	return [[l:singleAnchorFragmentRegexp], [l:singleAnchorFragmentRegexp]]
     endif
 
     " A strict CamelCase fragment consists of the CamelCase anchor followed by
@@ -130,11 +132,14 @@ function! s:BuildAlphabeticRegexpFragments( anchors )
     " would not yet have ended. (One following uppercase character is okay, as
     " long as the keyword doesn't end there, it is then the beginning of the
     " next CamelCase fragment.)
-    " To match, the first fragment must not be followed by an underscore
-    " character; otherwise, this would make the match at the beginning of a
-    " underscore_word always case insensitive.
+    " To match, the first fragment must not be followed by 
+    " a) an underscore character; otherwise, this would make the match at the
+    "    beginning of a underscore_word always case insensitive.
+    " b) a lowercase character; the match would stop in the middle of a fragment
+    "    and thus introduce a phantom fragment which could match a strict
+    "    underscore_word fragment. 
     let l:camelCaseStrictFragments =
-    \	['\%(' . l:camelCaseAnchors[0] . '\%(_\@!\k\&\U\)\+_\@!\|\%(' . toupper(a:anchors[0]) . '\&\u\)\u\+\%(\u\u\|\u\>\)\@!\)'] +
+    \	['\%(' . l:camelCaseAnchors[0] . '\%(_\@!\k\&\U\)\+\%(_\|\l\)\@!\|\%(' . toupper(a:anchors[0]) . '\&\u\)\u\+\%(\u\u\|\u\>\)\@!\)'] +
     \	map(l:camelCaseAnchors[1:], 'v:val . ''\%(\%(_\@!\k\&\U\)\+\|\u\+\%(\u\u\|\u\>\)\@!\)''')
 
     " A relaxed CamelCase fragment can also be followed by uppercase characters
@@ -148,20 +153,25 @@ function! s:BuildAlphabeticRegexpFragments( anchors )
     \	[l:camelCaseAnchors[0] . '\%(_\@!\k\)\*_\@!'] +
     \	map(l:camelCaseAnchors[1:], '''\%(\U\@<='' . v:val . ''\k\*\|'' . v:val . ''\l\k\*\)''')
 
-    " A strict underscore_word fragment consists of the anchor preceded by
-    " underscore(s) (except for the first fragment, where any preceding
-    " underscore(s) are optional), followed by keyword characters without '_'.
+    " A strict underscore_word fragment consists of either
+    " a) the anchor preceded by underscore(s) (except for the first fragment,
+    "    where any preceding underscore(s) are optional), followed by keyword
+    "    characters without '_'. 
+    " b) the anchor followed by keyword characters without '_'. After that, a
+    "    second underscore_word fragment must start (i.e. an after-match of
+    "    '_'), to ensure that the fragment is actually part of an
+    "    underscore_word. 
     " To match, the first fragment must be followed by underscore(s); otherwise,
     " this would swallow arbitrary text at the beginning of a CamelCaseWord. 
     let l:underscoreStrictFragments =
     \	['_\*' . a:anchors[0] . '\%(_\@!\k\)\+_\@='] +
-    \	map(a:anchors[1:], '"_\\+" . v:val . ''\%(_\@!\k\)\+''')
+    \	map(a:anchors[1:], '''\%(_\+'' . v:val . ''\%(_\@!\k\)\+\|'' . v:val . ''\%(_\@!\k\)\+_\@=\)''')
 
     " A relaxed underscore_word fragment can also swallow underscores for which
     " no anchor was provided. 
     let l:underscoreRelaxedFragments =
     \	['_\*' . a:anchors[0] . '\k\+_\@='] +
-    \	map(a:anchors[1:], '"_\\+" . v:val . ''\k\+''')
+    \	map(a:anchors[1:], '''_\+'' . v:val . ''\k\+''')
 
     " Each fragment must match either one part of a CamelCaseWord or
     " underscore_word. This way, combined CamelCase_with_underScoreWords can
@@ -237,7 +247,10 @@ function! s:BuildRegexp( base )
     endif
 
 "****D return [s:WholeWordMatch(l:strictRegexp), '']
-    return [s:WholeWordMatch(l:strictRegexp), s:WholeWordMatch(l:relaxedRegexp)]
+    " With no keyword anchors and no or only one alphabetic anchor, the relaxed
+    " regexp may be identical with the strict one. In this case, omit the
+    " relaxed regexp to avoid searching for (no existing) matches twice. 
+    return [s:WholeWordMatch(l:strictRegexp), (l:relaxedRegexp ==# l:strictRegexp ? '' : s:WholeWordMatch(l:relaxedRegexp))]
 endfunction
 function! s:CamelCaseComplete( findstart, base )
     if a:findstart
