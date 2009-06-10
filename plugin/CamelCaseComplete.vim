@@ -82,7 +82,7 @@ function! s:GetCompleteOption()
     return (exists('b:CamelCaseComplete_complete') ? b:CamelCaseComplete_complete : g:CamelCaseComplete_complete)
 endfunction
 
-function! s:BuildRegexpFragments( anchors )
+function! s:BuildAlphabeticRegexpFragments( anchors )
     " We need at least two anchors to be able to build an exact match for
     " CamelCaseWords or underscore_words. If we have less than that, build
     " regexps that match anything resembling CamelCaseWords / underscore_words. 
@@ -130,11 +130,11 @@ function! s:BuildRegexpFragments( anchors )
     " would not yet have ended. (One following uppercase character is okay, as
     " long as the keyword doesn't end there, it is then the beginning of the
     " next CamelCase fragment.)
-    " To match, the first fragment must be followed by an uppercase character;
-    " otherwise, this would make the match at the beginning of a underscore_word
-    " always case insensitive. 
+    " To match, the first fragment must not be followed by an underscore
+    " character; otherwise, this would make the match at the beginning of a
+    " underscore_word always case insensitive.
     let l:camelCaseStrictFragments =
-    \	['\%(' . l:camelCaseAnchors[0] . '\%(_\@!\k\&\U\)\+\u\@=\|\%(' . toupper(a:anchors[0]) . '\&\u\)\u\+\%(\u\u\|\u\>\)\@!\)'] +
+    \	['\%(' . l:camelCaseAnchors[0] . '\%(_\@!\k\&\U\)\+_\@!\|\%(' . toupper(a:anchors[0]) . '\&\u\)\u\+\%(\u\u\|\u\>\)\@!\)'] +
     \	map(l:camelCaseAnchors[1:], 'v:val . ''\%(\%(_\@!\k\&\U\)\+\|\u\+\%(\u\u\|\u\>\)\@!\)''')
 
     " A relaxed CamelCase fragment can also be followed by uppercase characters
@@ -174,6 +174,17 @@ function! s:BuildRegexpFragments( anchors )
     endfor
     return [l:strictRegexpFragments, l:relaxedRegexpFragments]
 endfunction
+function! s:BuildKeywordRegexpFragment( anchor )
+    " A strict keyword fragment consists of the keyword anchor optionally
+    " followed by anything that is not a CamelCase or underscore fragment. 
+    let l:strictRegexpFragment = a:anchor . '\%(_\@!\k\&\U\)\*'
+
+    " A relaxed keyword fragment can also be followed by uppercase characters
+    " and can swallow underscores. 
+    let l:relaxedRegexpFragment = a:anchor . '\k\*'
+    
+    return [l:strictRegexpFragment, l:relaxedRegexpFragment]
+endfunction
 function! s:WholeWordMatch( expr )
     return '\V\<' . a:expr . '\>'
 endfunction
@@ -187,7 +198,7 @@ function! s:BuildRegexp( base )
     let l:anchors = map(split(a:base, '\zs'), 'escape(v:val, "\\")')
     let l:alphabeticAnchors = filter(copy(l:anchors), 's:IsAlpha(v:val)')
 
-    let [l:strictRegexpFragments, l:relaxedRegexpFragments] = s:BuildRegexpFragments(l:alphabeticAnchors)
+    let [l:strictRegexpFragments, l:relaxedRegexpFragments] = s:BuildAlphabeticRegexpFragments(l:alphabeticAnchors)
 
     " Assemble all regexp fragments together to build the full regexp. 
     " There is a strict regexp which is tried first and a relaxed regexp to fall
@@ -204,9 +215,12 @@ function! s:BuildRegexp( base )
 	    if len(l:relaxedRegexpFragments) > 0
 		let l:relaxedRegexp .= remove(l:relaxedRegexpFragments, 0)
 	    endif
+"****D echomsg '####' l:anchor
 	else
-	    let l:strictRegexp  .= l:anchor
-	    let l:relaxedRegexp .= l:anchor
+	    let [l:strictRegexpFragment, l:relaxedRegexpFragment] = s:BuildKeywordRegexpFragment(l:anchor)
+	    let l:strictRegexp  .= l:strictRegexpFragment
+	    let l:relaxedRegexp .= l:relaxedRegexpFragment
+"****D echomsg '####' '"'. l:anchor . '"'
 	endif
     endfor
 
@@ -220,16 +234,9 @@ function! s:BuildRegexp( base )
 	if len(l:relaxedRegexpFragments) > 0
 	    let l:relaxedRegexp .= remove(l:relaxedRegexpFragments, 0)
 	endif
-    elseif ! s:IsAlpha(l:anchors[-1])
-	" We've had alphabetic anchors, so this is no blanket match for any
-	" CamelCaseWords / underscore_words. Now, the last anchor is a keyword. 
-	" To maintain the rule that anything can follow behind an anchor, add
-	" such a regexp fragment here. Otherwise, matches would have to _end_
-	" with the final anchor. 
-	let l:strictRegexp  .= '\k\+'
-	let l:relaxedRegexp .= '\k\+'
     endif
 
+"****D return [s:WholeWordMatch(l:strictRegexp), '']
     return [s:WholeWordMatch(l:strictRegexp), s:WholeWordMatch(l:relaxedRegexp)]
 endfunction
 function! s:CamelCaseComplete( findstart, base )
