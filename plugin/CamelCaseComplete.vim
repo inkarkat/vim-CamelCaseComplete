@@ -211,7 +211,8 @@ function! s:BuildRegexp( base )
     endfor
 
     " Each alphabetic anchor results in one fragment; there still is one
-    " fragment when there are no alphabetic anchors. 
+    " fragment to match any CamelCaseWords and underscore_words when there are
+    " no alphabetic anchors. 
     if len(l:alphabeticAnchors) == 0
 	if len(l:strictRegexpFragments) > 0
 	    let l:strictRegexp  .= remove(l:strictRegexpFragments, 0)
@@ -219,6 +220,14 @@ function! s:BuildRegexp( base )
 	if len(l:relaxedRegexpFragments) > 0
 	    let l:relaxedRegexp .= remove(l:relaxedRegexpFragments, 0)
 	endif
+    elseif ! s:IsAlpha(l:anchors[-1])
+	" We've had alphabetic anchors, so this is no blanket match for any
+	" CamelCaseWords / underscore_words. Now, the last anchor is a keyword. 
+	" To maintain the rule that anything can follow behind an anchor, add
+	" such a regexp fragment here. Otherwise, matches would have to _end_
+	" with the final anchor. 
+	let l:strictRegexp  .= '\k\+'
+	let l:relaxedRegexp .= '\k\+'
     endif
 
     return [s:WholeWordMatch(l:strictRegexp), s:WholeWordMatch(l:relaxedRegexp)]
