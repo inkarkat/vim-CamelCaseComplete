@@ -32,7 +32,7 @@
 "   for underscore_words. Without 'ignorecase', "ai" will only match
 "   "an_identifier" and "AI" -> "AN_Identifier". Case doesn't matter for
 "   CamelCaseWords, the first fragment can start with either lower or upper
-"   case; all subsequent fragments must start with an upper case letter. Thus,
+"   case; all subsequent fragments must start with an uppercase letter. Thus,
 "   you do not need to type "aCCW" to get "aCamelCaseWord"; "accw" will do, too. 
 "
 " INSTALLATION:
@@ -100,8 +100,8 @@ function! s:BuildRegexpFragments( anchors )
 	\]
     endif
 
-    " Each CamelCase anchor except the first one must match an upper case
-    " character; the CamelCaseWord may start with either lower or upper case. 
+    " Each CamelCase anchor except the first one must match an uppercase
+    " character; the CamelCaseWord may start with either lower or uppercase. 
     " Note: We cannot simply use toupper(); 'ignorecase' may suspend this
     " distinction. We also cannot force case sensitivity via /\C/, because that
     " would apply to the entire pattern and thus also to the underscore_words. 
@@ -124,13 +124,13 @@ function! s:BuildRegexpFragments( anchors )
     endif
 
     " A strict CamelCase fragment consists of the CamelCase anchor followed by
-    " non-uppercase keyword characters without '_', or the upper case anchor
-    " followed by a sequence of upper case characters (to handle ACRONYMS); this
+    " non-uppercase keyword characters without '_', or the uppercase anchor
+    " followed by a sequence of uppercase characters (to handle ACRONYMS); this
     " must not be followed by two (or more) uppercase characters, or the ACRONYM
     " would not yet have ended. (One following uppercase character is okay, as
     " long as the keyword doesn't end there, it is then the beginning of the
     " next CamelCase fragment.)
-    " To match, the first fragment must be followed by an upper case character;
+    " To match, the first fragment must be followed by an uppercase character;
     " otherwise, this would make the match at the beginning of a underscore_word
     " always case insensitive. 
     let l:camelCaseStrictFragments =
@@ -142,7 +142,7 @@ function! s:BuildRegexpFragments( anchors )
     " fragment or the anchor must be followed by a lowercase character to avoid
     " that anything inside an ACRONYM matches.
     " To match, the first fragment must not contain underscores and be followed
-    " by an upper case character; otherwise, this would make the match at the
+    " by an uppercase character; otherwise, this would make the match at the
     " beginning of a underscore_word always case insensitive.
     let l:camelCaseRelaxedFragments =
     \	[l:camelCaseAnchors[0] . '\%(_\@!\k\)\*\u\@='] +
@@ -177,23 +177,50 @@ endfunction
 function! s:WholeWordMatch( expr )
     return '\V\<' . a:expr . '\>'
 endfunction
+function! s:IsAlpha( expr )
+    return (a:expr =~# '^\a\+$')
+endfunction
 function! s:BuildRegexp( base )
-    " Each character is an anchor for the beginning of a CamelCaseWord. 
+    " Each alphabetic character is an anchor for the beginning of a
+    " CamelCaseWord or underscore_word. 
+    " All other (keyword) characters must just match at that position. 
     let l:anchors = map(split(a:base, '\zs'), 'escape(v:val, "\\")')
+    let l:alphabeticAnchors = filter(copy(l:anchors), 's:IsAlpha(v:val)')
 
-    let [l:strictRegexpFragments, l:relaxedRegexpFragments] = s:BuildRegexpFragments(l:anchors)
-
-    " Each anchor results in one fragment; there still is one fragment when
-    " there are no anchors. 
-    let l:fragmentsNum = (len(l:anchors) == 0 ? 1 : len(l:anchors))
+    let [l:strictRegexpFragments, l:relaxedRegexpFragments] = s:BuildRegexpFragments(l:alphabeticAnchors)
 
     " Assemble all regexp fragments together to build the full regexp. 
+    " There is a strict regexp which is tried first and a relaxed regexp to fall
+    " back on. 
+    " If an anchor is alphabetic, include the built regexp fragment. 
+    " If an anchor is a keyword character, just match that character. 
     let l:strictRegexp = ''
     let l:relaxedRegexp = ''
-    for l:i in range(l:fragmentsNum)
-	let l:strictRegexp  .= get(l:strictRegexpFragments,  l:i, '')
-	let l:relaxedRegexp .= get(l:relaxedRegexpFragments, l:i, '')
+    for l:anchor in l:anchors
+	if s:IsAlpha(l:anchor)
+	    if len(l:strictRegexpFragments) > 0
+		let l:strictRegexp  .= remove(l:strictRegexpFragments, 0)
+	    endif
+	    if len(l:relaxedRegexpFragments) > 0
+		let l:relaxedRegexp .= remove(l:relaxedRegexpFragments, 0)
+	    endif
+	else
+	    let l:strictRegexp  .= l:anchor
+	    let l:relaxedRegexp .= l:anchor
+	endif
     endfor
+
+    " Each alphabetic anchor results in one fragment; there still is one
+    " fragment when there are no alphabetic anchors. 
+    if len(l:alphabeticAnchors) == 0
+	if len(l:strictRegexpFragments) > 0
+	    let l:strictRegexp  .= remove(l:strictRegexpFragments, 0)
+	endif
+	if len(l:relaxedRegexpFragments) > 0
+	    let l:relaxedRegexp .= remove(l:relaxedRegexpFragments, 0)
+	endif
+    endif
+
     return [s:WholeWordMatch(l:strictRegexp), s:WholeWordMatch(l:relaxedRegexp)]
 endfunction
 function! s:CamelCaseComplete( findstart, base )
@@ -205,6 +232,7 @@ function! s:CamelCaseComplete( findstart, base )
 	endif
 	let l:base = strpart(getline('.'), l:startCol - 1, (col('.') - l:startCol))
 	let [s:strictRegexp, s:relaxedRegexp] = s:BuildRegexp(l:base)
+let [g:sr, g:rr] = [s:strictRegexp, s:relaxedRegexp]
 	return l:startCol - 1 " Return byte index, not column. 
     elseif ! empty(s:strictRegexp)
 	" Find keywords matching the prepared regexp. Use the relaxed regexp
