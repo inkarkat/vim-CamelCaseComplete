@@ -141,11 +141,11 @@ function! s:BuildRegexpFragments( anchors )
     " and can swallow underscores. No uppercase character must precede this
     " fragment or the anchor must be followed by a lowercase character to avoid
     " that anything inside an ACRONYM matches.
-    " To match, the first fragment must not contain underscores and be followed
-    " by an uppercase character; otherwise, this would make the match at the
-    " beginning of a underscore_word always case insensitive.
+    " To match, the first fragment must not contain underscores and not be
+    " followed by an underscore character; otherwise, this would make the match
+    " at the beginning of a underscore_word always case insensitive.
     let l:camelCaseRelaxedFragments =
-    \	[l:camelCaseAnchors[0] . '\%(_\@!\k\)\*\u\@='] +
+    \	[l:camelCaseAnchors[0] . '\%(_\@!\k\)\*_\@!'] +
     \	map(l:camelCaseAnchors[1:], '''\%(\U\@<='' . v:val . ''\k\*\|'' . v:val . ''\l\k\*\)''')
 
     " A strict underscore_word fragment consists of the anchor preceded by
