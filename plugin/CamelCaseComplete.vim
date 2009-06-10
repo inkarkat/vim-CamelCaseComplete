@@ -56,6 +56,8 @@
 " REVISION	DATE		REMARKS 
 "	004	11-Jun-2009	Implemented keyword (i.e. non-alphabetic)
 "				anchors. 
+"				BF: Strict underscore_word fragments swallowed
+"				CamelCaseWords. 
 "	003	10-Jun-2009	BF: ACRONYMs inside CamelCaseWords are now
 "				included in strict matches, not relaxed. 
 "				BF: Relaxed CamelCase match does not match
@@ -156,16 +158,22 @@ function! s:BuildAlphabeticRegexpFragments( anchors )
     " A strict underscore_word fragment consists of either
     " a) the anchor preceded by underscore(s) (except for the first fragment,
     "    where any preceding underscore(s) are optional), followed by keyword
-    "    characters without '_'. 
-    " b) the anchor followed by keyword characters without '_'. After that, a
-    "    second underscore_word fragment must start (i.e. an after-match of
-    "    '_'), to ensure that the fragment is actually part of an
-    "    underscore_word. 
+    "    characters without '_' that do not contain a CamelCaseWord. 
+    " b) the anchor followed by keyword characters without '_' that do not
+    "    contain a CamelCaseWord. After that, a second underscore_word fragment
+    "    must start (i.e. an after-match of '_'), to ensure that the fragment is
+    "    actually part of an underscore_word. 
+    " To avoid matching a CamelCaseWord, the keywords without '_' must not
+    " contain an uppercase character when there were lowercase characters
+    " before, so (in negation) they must be either non-lowercase characters
+    " optionally followed by lowercase characters, or all non-uppercase
+    " characters. 
+    "	Regexp: \%(_\@!\k\&\L\)\+\%(_\@!\k\&l\)\*\|\%(_\@!\k\&\U\)\+
     " To match, the first fragment must be followed by underscore(s); otherwise,
     " this would swallow arbitrary text at the beginning of a CamelCaseWord. 
     let l:underscoreStrictFragments =
-    \	['_\*' . a:anchors[0] . '\%(_\@!\k\)\+_\@='] +
-    \	map(a:anchors[1:], '''\%(_\+'' . v:val . ''\%(_\@!\k\)\+\|'' . v:val . ''\%(_\@!\k\)\+_\@=\)''')
+    \	['_\*' . a:anchors[0] . '\%(\%(_\@!\k\&\L\)\+\%(_\@!\k\&l\)\*\|\%(_\@!\k\&\U\)\+\)_\@='] +
+    \	map(a:anchors[1:], '''\%(_\+'' . v:val . ''\%(\%(_\@!\k\&\L\)\+\%(_\@!\k\&l\)\*\|\%(_\@!\k\&\U\)\+\)\|'' . v:val . ''\%(\%(_\@!\k\&\L\)\+\%(_\@!\k\&l\)\*\|\%(_\@!\k\&\U\)\+\)_\@=\)''')
 
     " A relaxed underscore_word fragment can also swallow underscores for which
     " no anchor was provided. 
@@ -261,16 +269,16 @@ function! s:CamelCaseComplete( findstart, base )
 	endif
 	let l:base = strpart(getline('.'), l:startCol - 1, (col('.') - l:startCol))
 	let [s:strictRegexp, s:relaxedRegexp] = s:BuildRegexp(l:base)
-let [g:sr, g:rr] = [s:strictRegexp, s:relaxedRegexp]
+"****D let [g:sr, g:rr] = [s:strictRegexp, s:relaxedRegexp]
 	return l:startCol - 1 " Return byte index, not column. 
     elseif ! empty(s:strictRegexp)
 	" Find keywords matching the prepared regexp. Use the relaxed regexp
 	" when the strict one doesn't yield any matches. 
 	let l:matches = []
-echomsg '****strict ' s:strictRegexp
+"****D echomsg '****strict ' s:strictRegexp
 	call CompleteHelper#FindMatches( l:matches, s:strictRegexp, {'complete': s:GetCompleteOption()} )
 	if empty(l:matches) && ! empty(s:relaxedRegexp)
-echomsg '****relaxed' s:relaxedRegexp
+"****D echomsg '****relaxed' s:relaxedRegexp
 	    echohl ModeMsg
 	    echo '-- User defined completion (^U^N^P) -- Relaxed search...'
 	    echohl None
