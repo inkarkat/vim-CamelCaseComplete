@@ -83,6 +83,9 @@ set cpo&vim
 if ! exists('g:CamelCaseComplete_complete')
     let g:CamelCaseComplete_complete = '.,w'
 endif
+if ! exists('g:CamelCaseComplete_FindStartMark')
+    let g:CamelCaseComplete_FindStartMark = ''
+endif
 
 function! s:GetCompleteOption()
     return (exists('b:CamelCaseComplete_complete') ? b:CamelCaseComplete_complete : g:CamelCaseComplete_complete)
@@ -270,6 +273,11 @@ function! s:CamelCaseComplete( findstart, base )
 	let l:base = strpart(getline('.'), l:startCol - 1, (col('.') - l:startCol))
 	let [s:strictRegexp, s:relaxedRegexp] = s:BuildRegexp(l:base)
 "****D let [g:sr, g:rr] = [s:strictRegexp, s:relaxedRegexp]
+
+	if !empty(g:CamelCaseComplete_FindStartMark)
+	    call setpos(printf("'%s", g:CamelCaseComplete_FindStartMark), [0, line('.'), l:startCol, 0])
+	endif
+
 	return l:startCol - 1 " Return byte index, not column. 
     elseif ! empty(s:strictRegexp)
 	" Find keywords matching the prepared regexp. Use the relaxed regexp
@@ -286,7 +294,7 @@ function! s:CamelCaseComplete( findstart, base )
 	endif
 	return l:matches
     else
-	" This completion doesn't work without a base. 
+	" This should not happen. 
 	return []
     endif
 endfunction
