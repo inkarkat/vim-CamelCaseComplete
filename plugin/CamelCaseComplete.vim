@@ -309,7 +309,7 @@ endfunction
 function! s:RemoveBaseKeys()
     return (s:isNoMatches && ! empty(g:CamelCaseComplete_FindStartMark) ? "\<C-e>\<C-\>\<C-o>dg`" . g:CamelCaseComplete_FindStartMark : '')
 endfunction
-inoremap <script> <Plug>CamelCaseCompleteRemoveBase <C-r>=<SID>RemoveBaseKeys()<CR>
+inoremap <script> <Plug>CamelCasePostComplete <C-r>=<SID>RemoveBaseKeys()<CR>
 
 inoremap <Plug>CamelCaseComplete <C-o>:set completefunc=<SID>CamelCaseComplete<CR><C-x><C-u>
 if ! hasmapto('<Plug>CamelCaseComplete', 'i')
@@ -319,7 +319,7 @@ if ! hasmapto('<Plug>CamelCaseComplete', 'i')
 	" turned off here (unless it has already been remapped elsewhere). 
 	inoremap <C-c> <Nop>
     endif
-    execute 'imap <C-x><C-c> <Plug>CamelCaseComplete' . (empty(g:CamelCaseComplete_FindStartMark) ? '' : '<Plug>CamelCaseCompleteRemoveBase')
+    execute 'imap <C-x><C-c> <Plug>CamelCaseComplete' . (empty(g:CamelCaseComplete_FindStartMark) ? '' : '<Plug>CamelCasePostComplete')
 endif
 
 let &cpo = s:save_cpo
