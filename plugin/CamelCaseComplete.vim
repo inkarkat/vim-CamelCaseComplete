@@ -54,6 +54,13 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	005	18-Jun-2009	Implemented optional setting of a mark at the
+"				findstart position. If this is done, the
+"				completion base is automatically removed if no
+"				matches were found: As the base just consists of
+"				a sequence of anchor characters, it isn't
+"				helpful for further editing when the completion
+"				failed. 
 "	004	11-Jun-2009	Implemented keyword (i.e. non-alphabetic)
 "				anchors. 
 "				BF: Strict underscore_word fragments swallowed
@@ -274,10 +281,10 @@ function! s:CamelCaseComplete( findstart, base )
 	let [s:strictRegexp, s:relaxedRegexp] = s:BuildRegexp(l:base)
 "****D let [g:sr, g:rr] = [s:strictRegexp, s:relaxedRegexp]
 
+	let s:findstart = [0, line('.'), l:startCol, 0]
 	if !empty(g:CamelCaseComplete_FindStartMark)
-	    call setpos(printf("'%s", g:CamelCaseComplete_FindStartMark), [0, line('.'), l:startCol, 0])
+	    call setpos(printf("'%s", g:CamelCaseComplete_FindStartMark), s:findstart)
 	endif
-
 	return l:startCol - 1 " Return byte index, not column. 
     elseif ! empty(s:strictRegexp)
 	" Find keywords matching the prepared regexp. Use the relaxed regexp
@@ -292,12 +299,17 @@ function! s:CamelCaseComplete( findstart, base )
 	    echohl None
 	    call CompleteHelper#FindMatches( l:matches, s:relaxedRegexp, {'complete': s:GetCompleteOption()} )
 	endif
+	let s:isNoMatches = empty(l:matches)
 	return l:matches
     else
-	" This should not happen. 
-	return []
+	throw "ASSERT: At least a strict regexp should have been built."
     endif
 endfunction
+
+function! s:RemoveBaseKeys()
+    return (s:isNoMatches && ! empty(g:CamelCaseComplete_FindStartMark) ? "\<C-e>\<C-\>\<C-o>dg`" . g:CamelCaseComplete_FindStartMark : '')
+endfunction
+inoremap <script> <Plug>CamelCaseCompleteRemoveBase <C-r>=<SID>RemoveBaseKeys()<CR>
 
 inoremap <Plug>CamelCaseComplete <C-o>:set completefunc=<SID>CamelCaseComplete<CR><C-x><C-u>
 if ! hasmapto('<Plug>CamelCaseComplete', 'i')
@@ -307,7 +319,7 @@ if ! hasmapto('<Plug>CamelCaseComplete', 'i')
 	" turned off here (unless it has already been remapped elsewhere). 
 	inoremap <C-c> <Nop>
     endif
-    imap <C-x><C-c> <Plug>CamelCaseComplete
+    execute 'imap <C-x><C-c> <Plug>CamelCaseComplete' . (empty(g:CamelCaseComplete_FindStartMark) ? '' : '<Plug>CamelCaseCompleteRemoveBase')
 endif
 
 let &cpo = s:save_cpo
