@@ -281,9 +281,11 @@ function! s:CamelCaseComplete( findstart, base )
 	let [s:strictRegexp, s:relaxedRegexp] = s:BuildRegexp(l:base)
 "****D let [g:sr, g:rr] = [s:strictRegexp, s:relaxedRegexp]
 
-	let s:findstart = [0, line('.'), l:startCol, 0]
 	if !empty(g:CamelCaseComplete_FindStartMark)
-	    call setpos(printf("'%s", g:CamelCaseComplete_FindStartMark), s:findstart)
+	    " Record the position of the start of the completion base to allow
+	    " removal of the completion base if no matches were found. 
+	    let l:findstart = [0, line('.'), l:startCol, 0]
+	    call setpos(printf("'%s", g:CamelCaseComplete_FindStartMark), l:findstart)
 	endif
 	return l:startCol - 1 " Return byte index, not column. 
     elseif ! empty(s:strictRegexp)
