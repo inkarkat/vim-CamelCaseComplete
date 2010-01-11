@@ -54,6 +54,11 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	006	07-Aug-2009	Using a map-expr instead of i_CTRL-O to set
+"				'completefunc', as the temporary leave of insert
+"				mode caused a later repeat via '.' to only
+"				insert the completed fragment, not the entire
+"				inserted text.  
 "	005	18-Jun-2009	Implemented optional setting of a mark at the
 "				findstart position. If this is done, the
 "				completion base is automatically removed if no
@@ -270,7 +275,7 @@ function! s:BuildRegexp( base )
     " relaxed regexp to avoid searching for (no existing) matches twice. 
     return [s:WholeWordMatch(l:strictRegexp), (l:relaxedRegexp ==# l:strictRegexp ? '' : s:WholeWordMatch(l:relaxedRegexp))]
 endfunction
-function! s:CamelCaseComplete( findstart, base )
+function! CamelCaseComplete#CamelCaseComplete( findstart, base )
     if a:findstart
 	" Locate the start of the keyword. 
 	let l:startCol = searchpos('\k*\%#', 'bn', line('.'))[1]
@@ -313,7 +318,11 @@ function! s:RemoveBaseKeys()
 endfunction
 inoremap <script> <Plug>CamelCasePostComplete <C-r>=<SID>RemoveBaseKeys()<CR>
 
-inoremap <Plug>CamelCaseComplete <C-o>:set completefunc=<SID>CamelCaseComplete<CR><C-x><C-u>
+function! s:CamelCaseCompleteExpr()
+    set completefunc=CamelCaseComplete#CamelCaseComplete
+    return "\<C-x>\<C-u>"
+endfunction
+inoremap <script> <expr> <Plug>CamelCaseComplete <SID>CamelCaseCompleteExpr()
 if ! hasmapto('<Plug>CamelCaseComplete', 'i')
     if empty(maparg("\<C-c>", 'i'))
 	" The i_CTRL-C command quits insert mode; it seems this even happens
