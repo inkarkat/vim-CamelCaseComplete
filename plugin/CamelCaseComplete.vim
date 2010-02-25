@@ -291,7 +291,7 @@ function! s:BuildRegexp( base )
 endfunction
 function! CamelCaseComplete#CamelCaseComplete( findstart, base )
     if a:findstart
-	" Locate the start of the keyword. 
+	" Locate the start of the keyword that represents the initial letters. 
 	let l:startCol = searchpos('\k*\%#', 'bn', line('.'))[1]
 	if l:startCol == 0
 	    let l:startCol = col('.')
@@ -323,7 +323,7 @@ function! CamelCaseComplete#CamelCaseComplete( findstart, base )
 	let s:isNoMatches = empty(l:matches)
 	return l:matches
     else
-	throw "ASSERT: At least a strict regexp should have been built."
+	throw 'ASSERT: At least a strict regexp should have been built.'
     endif
 endfunction
 
