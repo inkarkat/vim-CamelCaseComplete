@@ -3,7 +3,7 @@
 runtime plugin/CamelCaseComplete.vim
 source helpers/completetest.vim
 call vimtest#StartTap()
-call vimtap#Plan(18) 
+call vimtap#Plan(22) 
 edit CamelCaseComplete.txt
 
 call SetCompletion("\<C-x>\<C-c>")
@@ -11,6 +11,11 @@ call SetCompletion("\<C-x>\<C-c>")
 call IsMatchesInIsolatedLine('iicc', ['identifierInCamelCase'], 'single CamelCase strict match with iicc')
 call IsMatchesInIsolatedLine('IICC', ['identifierInCamelCase'], 'single CamelCase strict match with IICC')
 call IsMatchesInIsolatedLine('IiCc', ['identifierInCamelCase'], 'single CamelCase strict match with IiCc')
+
+call IsMatchesInIsolatedLine('rr', ['relaxedRegexp'], 'strict match for rr')
+call IsMatchesInIsolatedLine('irr', ['inRelaxedRegexp'], 'strict match for irr')
+call IsMatchesInIsolatedLine('rk', [], 'no REMAR-KS match for rk')
+call IsMatchesInIsolatedLine('irk', [], 'no in-REMAR-KS match for irk')
 
 call IsMatchesInIsolatedLine('masr', ['myACNSubscriptionRenewal'], 'strict match for masr')
 call IsMatchesInIsolatedLine('macnsr', [], 'no match when spelling out acronym for macnsr')
