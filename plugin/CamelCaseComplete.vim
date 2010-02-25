@@ -39,21 +39,31 @@
 "
 " INSTALLATION:
 " DEPENDENCIES:
+"   - Requires Vim 7.1 or higher. 
 "   - CompleteHelper.vim autoload script. 
 "
 " CONFIGURATION:
+"   To disable the removal of the (mostly useless) completion base when aborting
+"   with <Esc> while there are no matches: >
+"	let g:CamelCaseComplete_FindStartMark = ''
+"	
 " INTEGRATION:
 " LIMITATIONS:
 " ASSUMPTIONS:
 " KNOWN PROBLEMS:
 " TODO:
 "
-" Copyright: (C) 2009 by Ingo Karkat
+" Copyright: (C) 2009-2010 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	007	12-Jan-2010	Now setting g:CamelCaseComplete_FindStartMark by
+"				default, and considering the limited
+"				availability of the '" mark. 
+"				Found out that the plugin doesn't work on Vim
+"				7.0; updated version guard. 
 "	006	07-Aug-2009	Using a map-expr instead of i_CTRL-O to set
 "				'completefunc', as the temporary leave of insert
 "				mode caused a later repeat via '.' to only
@@ -84,7 +94,7 @@
 "	001	08-Jun-2009	file creation
 
 " Avoid installing twice or when in unsupported Vim version. 
-if exists('g:loaded_CamelCaseComplete') || (v:version < 700)
+if exists('g:loaded_CamelCaseComplete') || (v:version < 701)
     finish
 endif
 let g:loaded_CamelCaseComplete = 1
@@ -96,7 +106,11 @@ if ! exists('g:CamelCaseComplete_complete')
     let g:CamelCaseComplete_complete = '.,w'
 endif
 if ! exists('g:CamelCaseComplete_FindStartMark')
-    let g:CamelCaseComplete_FindStartMark = ''
+    " To avoid clobbering user-set marks, we use the obscure "last exit point of
+    " buffer" mark. 
+    " Setting of mark '" is only supported since Vim 7.2; use last jump mark ''
+    " for Vim 7.1. 
+    let g:CamelCaseComplete_FindStartMark = (v:version < 702 ? "'" : '"')
 endif
 
 function! s:GetCompleteOption()
@@ -286,7 +300,7 @@ function! CamelCaseComplete#CamelCaseComplete( findstart, base )
 	let [s:strictRegexp, s:relaxedRegexp] = s:BuildRegexp(l:base)
 "****D let [g:sr, g:rr] = [s:strictRegexp, s:relaxedRegexp]
 
-	if !empty(g:CamelCaseComplete_FindStartMark)
+	if ! empty(g:CamelCaseComplete_FindStartMark)
 	    " Record the position of the start of the completion base to allow
 	    " removal of the completion base if no matches were found. 
 	    let l:findstart = [0, line('.'), l:startCol, 0]
