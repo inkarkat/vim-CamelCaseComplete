@@ -1,7 +1,7 @@
 " Test: Case-insensitive completion of CamelCase words. 
 
 runtime plugin/CamelCaseComplete.vim
-source helpers/completetest.vim
+source ../helpers/completetest.vim
 call vimtest#StartTap()
 call vimtap#Plan(12) 
 edit CamelCaseComplete.txt
