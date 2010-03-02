@@ -7,7 +7,7 @@ call vimtap#Plan(12)
 edit CamelCaseComplete.txt
 set ignorecase nosmartcase
 
-call SetCompletion("\<C-x>\<C-c>")
+set completefunc=CamelCaseComplete#CamelCaseComplete
 
 call IsMatchesInIsolatedLine('iicc', ['identifierInCamelCase'], 'single CamelCase strict match')
 call IsMatchesInIsolatedLine('puw', ['preferring_underscore_words'], 'single underscore_word strict match')
