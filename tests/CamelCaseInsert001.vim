@@ -1,7 +1,7 @@
 " Test: Insertion of CamelCase words. 
 
 runtime plugin/CamelCaseComplete.vim
-source helpers/insert.vim
+source ../helpers/insert.vim
 view CamelCaseComplete.txt
 new
 
