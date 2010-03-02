@@ -7,7 +7,7 @@ call vimtap#Plan(10)
 edit CamelCaseComplete.txt
 setlocal iskeyword-=_
 
-call SetCompletion("\<C-x>\<C-c>")
+set completefunc=CamelCaseComplete#CamelCaseComplete
 
 call IsMatchesInIsolatedLine('V', ['virtCol', 'VirtColStrFromStart', 'VirtColStrFromEnd'], 'single-anchor match for V')
 call IsMatchesInIsolatedLine('b', ['BadCodeName', 'bad_code_name', 'bad_CODE_NAME'], 'single-anchor match for b')
