@@ -1,8 +1,8 @@
 " Test: Insertion of CamelCase words. 
 
-let g:CamelCaseComplete_FindStartMark = '"'
+let g:CamelCaseComplete_FindStartMark = 'z'
 runtime plugin/CamelCaseComplete.vim
-source helpers/insert.vim
+source ../helpers/insert.vim
 view CamelCaseComplete.txt
 new
 
