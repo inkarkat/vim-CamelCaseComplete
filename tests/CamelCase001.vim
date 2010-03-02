@@ -6,7 +6,7 @@ call vimtest#StartTap()
 call vimtap#Plan(22) 
 edit CamelCaseComplete.txt
 
-call SetCompletion("\<C-x>\<C-c>")
+set completefunc=CamelCaseComplete#CamelCaseComplete
 
 call IsMatchesInIsolatedLine('iicc', ['identifierInCamelCase'], 'single CamelCase strict match')
 call IsMatchesInIsolatedLine('jjcc', ['jdentifierJnCamelCase'], 'single CamelCase strict match')
