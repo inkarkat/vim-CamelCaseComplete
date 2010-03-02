@@ -6,7 +6,7 @@ call vimtest#StartTap()
 call vimtap#Plan(16) 
 edit CamelCaseComplete.txt
 
-call SetCompletion("\<C-x>\<C-c>")
+set completefunc=CamelCaseComplete#CamelCaseComplete
 
 setlocal iskeyword+=:
 call IsMatchesInIsolatedLine('TMTMTM', ['TickMeTockMeTuckMe', 'Tick_Me_Tock_Me_Tuck_Me', 'TiggleMe:TaggleMe:ToggleMe', 'Tiggle_Me:Taggle_Me:Toggle_Me'], '4 strict matches for TMTMTM')
