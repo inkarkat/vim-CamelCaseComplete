@@ -1,7 +1,7 @@
 " Test: Keyword delimiting. 
 
 runtime plugin/CamelCaseComplete.vim
-source helpers/insert.vim
+source ../helpers/insert.vim
 view CamelCaseComplete.txt
 new
 
