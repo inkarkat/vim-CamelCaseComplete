@@ -1,7 +1,6 @@
-" Test: Insertion of CamelCase words. 
+" Test: Removal of CamelCase base when no match. 
 
 let g:CamelCaseComplete_FindStartMark = 'z'
-runtime plugin/CamelCaseComplete.vim
 source ../helpers/insert.vim
 view CamelCaseComplete.txt
 new
