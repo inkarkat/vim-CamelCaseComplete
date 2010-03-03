@@ -1,6 +1,8 @@
 " Test: Keyword delimiting. 
 
-runtime plugin/CamelCaseComplete.vim
+" Keep the completion base when no matches here. 
+let g:CamelCaseComplete_FindStartMark = ''
+
 source ../helpers/insert.vim
 view CamelCaseComplete.txt
 new
