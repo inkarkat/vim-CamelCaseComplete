@@ -14,7 +14,7 @@
 "   number of matches. 
 "
 " USAGE:
-" i_CTRL-X_CTRL-C	Find matches for CamelCaseWords and underscore_words
+" <i_CTRL-X_CTRL-C>	Find matches for CamelCaseWords and underscore_words
 "			whose individual word fragments begin with the typed
 "			letters in front of the cursor. 
 "
@@ -43,6 +43,13 @@
 "   - CompleteHelper.vim autoload script. 
 "
 " CONFIGURATION:
+"   Analoguous to the 'complete' option, you can specify which buffers will be
+"   scanned for completion candidates. Currently, only '.' (current buffer) and
+"   'w' (buffers from other windows) are supported. >
+"	let g:CamelCaseComplete_complete string = '.,w'
+"   The global setting can be overridden for a particular buffer
+"   (b:CamelCaseComplete_complete). 
+"
 "   To disable the removal of the (mostly useless) completion base when aborting
 "   with <Esc> while there are no matches: >
 "	let g:CamelCaseComplete_FindStartMark = ''
@@ -59,6 +66,14 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	008	26-Feb-2010	Moved s:BuildRegexp() from "findstart" to "base"
+"				invocation, so that the script-scoped
+"				strictRegexp and relaxedRegexp become local
+"				variables. It doesn't matter when this is
+"				invoked; if the base becomes smaller (due to the
+"				user undoing the completion via CTRL-E or by
+"				repeating <BS>), Vim will re-invoke both modes,
+"				anyway. 
 "	007	12-Jan-2010	Now setting g:CamelCaseComplete_FindStartMark by
 "				default, and considering the limited
 "				availability of the '" mark. 
@@ -296,9 +311,6 @@ function! CamelCaseComplete#CamelCaseComplete( findstart, base )
 	if l:startCol == 0
 	    let l:startCol = col('.')
 	endif
-	let l:base = strpart(getline('.'), l:startCol - 1, (col('.') - l:startCol))
-	let [s:strictRegexp, s:relaxedRegexp] = s:BuildRegexp(l:base)
-"****D let [g:sr, g:rr] = [s:strictRegexp, s:relaxedRegexp]
 
 	if ! empty(g:CamelCaseComplete_FindStartMark)
 	    " Record the position of the start of the completion base to allow
@@ -306,24 +318,27 @@ function! CamelCaseComplete#CamelCaseComplete( findstart, base )
 	    let l:findstart = [0, line('.'), l:startCol, 0]
 	    call setpos(printf("'%s", g:CamelCaseComplete_FindStartMark), l:findstart)
 	endif
+
 	return l:startCol - 1 " Return byte index, not column. 
-    elseif ! empty(s:strictRegexp)
+    else
+	let [l:strictRegexp, l:relaxedRegexp] = s:BuildRegexp(a:base)
+"****D let [g:sr, g:rr] = [l:strictRegexp, l:relaxedRegexp]
+	if empty(l:strictRegexp) | throw 'ASSERT: At least a strict regexp should have been built.' | endif
+
 	" Find keywords matching the prepared regexp. Use the relaxed regexp
 	" when the strict one doesn't yield any matches. 
 	let l:matches = []
-"****D echomsg '****strict ' s:strictRegexp
-	call CompleteHelper#FindMatches( l:matches, s:strictRegexp, {'complete': s:GetCompleteOption()} )
-	if empty(l:matches) && ! empty(s:relaxedRegexp)
-"****D echomsg '****relaxed' s:relaxedRegexp
+"****D echomsg '****strict ' l:strictRegexp
+	call CompleteHelper#FindMatches( l:matches, l:strictRegexp, {'complete': s:GetCompleteOption()} )
+	if empty(l:matches) && ! empty(l:relaxedRegexp)
+"****D echomsg '****relaxed' l:relaxedRegexp
 	    echohl ModeMsg
 	    echo '-- User defined completion (^U^N^P) -- Relaxed search...'
 	    echohl None
-	    call CompleteHelper#FindMatches( l:matches, s:relaxedRegexp, {'complete': s:GetCompleteOption()} )
+	    call CompleteHelper#FindMatches( l:matches, l:relaxedRegexp, {'complete': s:GetCompleteOption()} )
 	endif
 	let s:isNoMatches = empty(l:matches)
 	return l:matches
-    else
-	throw 'ASSERT: At least a strict regexp should have been built.'
     endif
 endfunction
 
