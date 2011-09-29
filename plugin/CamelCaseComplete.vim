@@ -50,8 +50,8 @@
 "   The global setting can be overridden for a particular buffer
 "   (b:CamelCaseComplete_complete). 
 "
-"   To disable the removal of the (mostly useless) completion base when aborting
-"   with <Esc> while there are no matches: >
+"   To disable the removal of the (mostly useless) completion base when there
+"   are no matches: >
 "	let g:CamelCaseComplete_FindStartMark = ''
 "	
 " INTEGRATION:
