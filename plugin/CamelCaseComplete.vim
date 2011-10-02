@@ -60,12 +60,14 @@
 " KNOWN PROBLEMS:
 " TODO:
 "
-" Copyright: (C) 2009-2010 by Ingo Karkat
+" Copyright: (C) 2009-2011 by Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	009	30-Sep-2011	Use <silent> for <Plug> mapping instead of
+"				default mapping. 
 "	008	26-Feb-2010	Moved s:BuildRegexp() from "findstart" to "base"
 "				invocation, so that the script-scoped
 "				strictRegexp and relaxedRegexp become local
@@ -113,7 +115,6 @@ if exists('g:loaded_CamelCaseComplete') || (v:version < 701)
     finish
 endif
 let g:loaded_CamelCaseComplete = 1
-
 let s:save_cpo = &cpo
 set cpo&vim
 
@@ -345,7 +346,7 @@ endfunction
 function! s:RemoveBaseKeys()
     return (s:isNoMatches && ! empty(g:CamelCaseComplete_FindStartMark) ? "\<C-e>\<C-\>\<C-o>dg`" . g:CamelCaseComplete_FindStartMark : '')
 endfunction
-inoremap <script> <Plug>CamelCasePostComplete <C-r>=<SID>RemoveBaseKeys()<CR>
+inoremap <silent> <script> <Plug>CamelCasePostComplete <C-r>=<SID>RemoveBaseKeys()<CR>
 
 function! s:CamelCaseCompleteExpr()
     set completefunc=CamelCaseComplete#CamelCaseComplete
@@ -364,5 +365,4 @@ endif
 
 let &cpo = s:save_cpo
 unlet s:save_cpo
-
 " vim: set sts=4 sw=4 noexpandtab ff=unix fdm=syntax :
