@@ -60,7 +60,7 @@
 " KNOWN PROBLEMS:
 " TODO:
 "
-" Copyright: (C) 2009-2011 by Ingo Karkat
+" Copyright: (C) 2009-2011 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -346,21 +346,21 @@ endfunction
 function! s:RemoveBaseKeys()
     return (s:isNoMatches && ! empty(g:CamelCaseComplete_FindStartMark) ? "\<C-e>\<C-\>\<C-o>dg`" . g:CamelCaseComplete_FindStartMark : '')
 endfunction
-inoremap <silent> <script> <Plug>CamelCasePostComplete <C-r>=<SID>RemoveBaseKeys()<CR>
+inoremap <silent> <script> <Plug>(CamelCasePostComplete) <C-r>=<SID>RemoveBaseKeys()<CR>
 
 function! s:CamelCaseCompleteExpr()
     set completefunc=CamelCaseComplete#CamelCaseComplete
     return "\<C-x>\<C-u>"
 endfunction
-inoremap <script> <expr> <Plug>CamelCaseComplete <SID>CamelCaseCompleteExpr()
-if ! hasmapto('<Plug>CamelCaseComplete', 'i')
+inoremap <script> <expr> <Plug>(CamelCaseComplete) <SID>CamelCaseCompleteExpr()
+if ! hasmapto('<Plug>(CamelCaseComplete)', 'i')
     if empty(maparg("\<C-c>", 'i'))
 	" The i_CTRL-C command quits insert mode; it seems this even happens
 	" when <C-c> is part of a mapping. To avoid this, the <C-c> command is
 	" turned off here (unless it has already been remapped elsewhere). 
 	inoremap <C-c> <Nop>
     endif
-    execute 'imap <C-x><C-c> <Plug>CamelCaseComplete' . (empty(g:CamelCaseComplete_FindStartMark) ? '' : '<Plug>CamelCasePostComplete')
+    execute 'imap <C-x><C-c> <Plug>(CamelCaseComplete)' . (empty(g:CamelCaseComplete_FindStartMark) ? '' : '<Plug>(CamelCasePostComplete)')
 endif
 
 let &cpo = s:save_cpo
