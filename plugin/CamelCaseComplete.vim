@@ -66,6 +66,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	010	02-Nov-2011	FIX: Do not clobber unnamed register when
+"				removing base keys. 
 "	009	30-Sep-2011	Use <silent> for <Plug> mapping instead of
 "				default mapping. 
 "	008	26-Feb-2010	Moved s:BuildRegexp() from "findstart" to "base"
@@ -344,7 +346,7 @@ function! CamelCaseComplete#CamelCaseComplete( findstart, base )
 endfunction
 
 function! s:RemoveBaseKeys()
-    return (s:isNoMatches && ! empty(g:CamelCaseComplete_FindStartMark) ? "\<C-e>\<C-\>\<C-o>dg`" . g:CamelCaseComplete_FindStartMark : '')
+    return (s:isNoMatches && ! empty(g:CamelCaseComplete_FindStartMark) ? "\<C-e>\<C-\>\<C-o>\"_dg`" . g:CamelCaseComplete_FindStartMark : '')
 endfunction
 inoremap <silent> <script> <Plug>(CamelCasePostComplete) <C-r>=<SID>RemoveBaseKeys()<CR>
 
