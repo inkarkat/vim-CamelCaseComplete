@@ -177,10 +177,10 @@ function! s:BuildAlphabeticRegexpFragments( isStartFragment, anchors )
     " Note: We cannot simply use toupper(); 'ignorecase' may suspend this
     " distinction. We also cannot force case sensitivity via /\C/, because that
     " would apply to the entire pattern and thus also to the underscore_words. 
-    let l:camelCaseConversion = '"\\%(" . toupper(v:val) . "\\&\\u\\|\\(\\k\\&\\A\\)\\+" . v:val . "\\)"'
+    let l:camelCaseConversion = '"\\%(" . toupper(v:val) . "\\&\\u\\|\\%(\\k\\&\\A\\)\\+" . v:val . "\\)"'
     let l:camelCaseAnchors = (a:isStartFragment ?
     \	[ a:anchors[0]] + map(a:anchors[1:], l:camelCaseConversion) :
-    \	map(a:anchors, l:camelCaseConversion)
+    \	map(copy(a:anchors), l:camelCaseConversion)
     \)
 
     " A strict CamelCase fragment consists of the CamelCase anchor followed by
@@ -288,6 +288,7 @@ function! s:BuildRegexp( base )
 		" that match anything resembling CamelCaseWords /
 		" underscore_words. 
 		let [l:strictRegexpFragment, l:relaxedRegexpFragment] = s:BuildSingleAlphabeticAnchorFragment(l:anchor)
+echomsg '####' l:anchor
 	    else
 		" If an anchor is alphabetic, build a regexp fragment from it and
 		" all following alphabetic anchors. We cannot just concatenate
@@ -322,9 +323,8 @@ echomsg '####' '"'. l:anchor . '"'
 	let [l:strictRegexpFragment, l:relaxedRegexpFragment] = s:BuildAnyMatchFragment()
 	let l:strictRegexp  .= l:strictRegexpFragment
 	let l:relaxedRegexp .= l:relaxedRegexpFragment
+echomsg '#### ...'
     endif
-"echomsg '####' l:strictRegexp
-echomsg '####' l:relaxedRegexp
 
 "****D return [s:WholeWordMatch(l:strictRegexp), '']
     " With no keyword anchors and no or only one alphabetic anchor, the relaxed
