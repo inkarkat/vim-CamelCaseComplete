@@ -142,6 +142,9 @@ function! s:GetCompleteOption()
     return (exists('b:CamelCaseComplete_complete') ? b:CamelCaseComplete_complete : g:CamelCaseComplete_complete)
 endfunction
 
+function! s:ToCamelCaseAnchor( anchor )
+    return '\%(' . toupper(a:anchor) . '\&\u\|\%(\k\&\A\)\+' . a:anchor . '\)'
+endfunction
 function! s:BuildAnyMatchFragment()
     " Without any anchors, build a regexp that matches any CamelCaseWord or
     " underscore_word. 
@@ -165,7 +168,7 @@ function! s:BuildSingleAlphabeticAnchorFragment( anchor )
     \   '\)'
     return [l:singleAnchorFragmentRegexp, l:singleAnchorFragmentRegexp]
 endfunction
-function! s:BuildAlphabeticRegexpFragments( anchors )
+function! s:BuildAlphabeticRegexpFragments( isStartFragment, anchors )
     " We need at least two anchors in total to be able to build an exact match
     " for CamelCaseWords or underscore_words. 
     if len(a:anchors) < 1 | throw 'ASSERT: Must pass at least one anchor.' | endif
@@ -178,8 +181,7 @@ function! s:BuildAlphabeticRegexpFragments( anchors )
     " distinction. We also cannot force case sensitivity via /\C/, because that
     " would apply to the entire pattern and thus also to the underscore_words. 
     let l:camelCaseAnchors = 
-    \	[ a:anchors[0]] +
-    \	map(a:anchors[1:], '"\\%(" . toupper(v:val) . "\\&\\u\\|\\%(\\k\\&\\A\\)\\+" . v:val . "\\)"')
+    \	map(copy(a:anchors), 's:ToCamelCaseAnchor(v:val)')
 
     " A strict CamelCase fragment consists of the CamelCase anchor followed by
     " non-uppercase keyword characters without '_', or the uppercase anchor
@@ -195,7 +197,7 @@ function! s:BuildAlphabeticRegexpFragments( anchors )
     "    and thus introduce a phantom fragment which could match a strict
     "    underscore_word fragment. 
     let l:camelCaseStrictFragments =
-    \	['\%(' . l:camelCaseAnchors[0] . '\%(_\@!\k\&\U\)\+\%(_\|\l\)\@!\|\%(' . toupper(a:anchors[0]) . '\&\u\)\u\+\%(\u\u\|\u\>\)\@!\)'] +
+    \	['\%(' . a:anchors[0] . '\%(_\@!\k\&\U\)\+\%(_\|\l\)\@!\|\%(' . toupper(a:anchors[0]) . '\&\u\)\u\+\%(\u\u\|\u\>\)\@!\)'] +
     \	map(l:camelCaseAnchors[1:], 'v:val . ''\%(\%(_\@!\k\&\U\)\+\|\u\+\%(\u\u\|\u\>\)\@!\)''')
 
     " A relaxed CamelCase fragment can also be followed by uppercase characters
@@ -206,7 +208,7 @@ function! s:BuildAlphabeticRegexpFragments( anchors )
     " followed by an underscore character; otherwise, this would make the match
     " at the beginning of a underscore_word always case insensitive.
     let l:camelCaseRelaxedFragments =
-    \	[l:camelCaseAnchors[0] . '\%(_\@!\k\)\*_\@!'] +
+    \	[(a:isStartFragment ? a:anchors[0] : l:camelCaseAnchors[0]) . '\%(_\@!\k\)\*_\@!'] +
     \	map(l:camelCaseAnchors[1:], '''\%(\U\@<='' . v:val . ''\k\*\|'' . v:val . ''\l\k\*\)''')
 
     " A strict underscore_word fragment consists of either
@@ -277,6 +279,7 @@ function! s:BuildRegexp( base )
     let l:relaxedRegexp = ''
     let l:idx = 0
     let l:alphabeticAnchorSequence = []
+    let l:isStartAlphabeticFragment = 1
     while l:idx < len(l:anchors)
 	let l:anchor = l:anchors[l:idx]
 	if s:IsAlpha(l:anchor)
@@ -285,7 +288,7 @@ function! s:BuildRegexp( base )
 		" that match anything resembling CamelCaseWords /
 		" underscore_words. 
 		let [l:strictRegexpFragment, l:relaxedRegexpFragment] = s:BuildSingleAlphabeticAnchorFragment(l:anchor)
-echomsg '####' l:anchor
+echomsg '####' l:isStartAlphabeticFragment l:anchor
 	    else
 		" If an anchor is alphabetic, build a regexp fragment from it and
 		" all following alphabetic anchors. We cannot just concatenate
@@ -296,9 +299,11 @@ echomsg '####' l:anchor
 		    call add(l:alphabeticAnchorSequence, l:anchors[l:idx])
 		endwhile
 		let [l:strictRegexpFragment, l:relaxedRegexpFragment] =
-		\   s:BuildAlphabeticRegexpFragments(l:alphabeticAnchorSequence)
-echomsg '####' join(l:alphabeticAnchorSequence)
+		\   s:BuildAlphabeticRegexpFragments(l:isStartAlphabeticFragment, l:alphabeticAnchorSequence)
+
+echomsg '####' l:isStartAlphabeticFragment join(l:alphabeticAnchorSequence)
 	    endif
+	    let l:isStartAlphabeticFragment = 0
 	else
 	    " If an anchor is a keyword character, just match that character. 
 	    let [l:strictRegexpFragment, l:relaxedRegexpFragment] = s:BuildKeywordRegexpFragment(l:anchor)
