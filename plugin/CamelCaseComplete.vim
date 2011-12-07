@@ -159,14 +159,16 @@ function! s:BuildAlphabeticRegexpFragments( anchors )
 	return [[l:anyFragmentRegexp], [l:anyFragmentRegexp]]
     endif
 
-    " Each CamelCase anchor except the first one must match an uppercase
-    " character; the CamelCaseWord may start with either lower or uppercase. 
+    " The CamelCaseWord may start with either lower or uppercase; each following
+    " CamelCase anchor one must match an uppercase character, except when it is
+    " preceded by non-alphabetic keyword characters. I.e. we recognize in
+    " camelWord#isHere the fragments "c", "W", "i" and "H". 
     " Note: We cannot simply use toupper(); 'ignorecase' may suspend this
     " distinction. We also cannot force case sensitivity via /\C/, because that
     " would apply to the entire pattern and thus also to the underscore_words. 
     let l:camelCaseAnchors = 
     \	[ a:anchors[0]] +
-    \	map(a:anchors[1:], '"\\%(" . toupper(v:val) . "\\&\\u\\)"')
+    \	map(a:anchors[1:], '"\\%(" . toupper(v:val) . "\\&\\u\\|\\(\\k\\&\\A\\)\\+" . v:val . "\\)"')
 
     " With just one anchor, build a regexp that matches any CamelCaseWord or
     " underscore_word starting with the anchor (possibly preceded by leading
