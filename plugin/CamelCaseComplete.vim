@@ -156,7 +156,7 @@ function! s:BuildAlphabeticRegexpFragments( anchors )
 	\   '\|' .
 	\	'_\*\k\*\%(_\@!\k\)_\+\%(_\@!\k\)\%(\k\|_\)\*' .
 	\   '\)'
-	return [[l:anyFragmentRegexp], [l:anyFragmentRegexp]]
+	return [l:anyFragmentRegexp, l:anyFragmentRegexp]
     endif
 
     " The CamelCaseWord may start with either lower or uppercase; each following
@@ -180,7 +180,7 @@ function! s:BuildAlphabeticRegexpFragments( anchors )
 	\   '\|' .
 	\	'_\*' . a:anchors[0] . '\k\*\%(_\@!\k\)_\+\%(_\@!\k\)\%(\k\|_\)\*' .
 	\   '\)'
-	return [[l:singleAnchorFragmentRegexp], [l:singleAnchorFragmentRegexp]]
+	return [l:singleAnchorFragmentRegexp, l:singleAnchorFragmentRegexp]
     endif
 
     " A strict CamelCase fragment consists of the CamelCase anchor followed by
@@ -246,16 +246,16 @@ function! s:BuildAlphabeticRegexpFragments( anchors )
 	call add(l:strictRegexpFragments, '\%(' . l:camelCaseStrictFragments[l:i]  . '\|' . l:underscoreStrictFragments[l:i]  . '\)')
 	call add(l:relaxedRegexpFragments, '\%(' . l:camelCaseRelaxedFragments[l:i] . '\|' . l:underscoreRelaxedFragments[l:i] . '\)')
     endfor
-    return [l:strictRegexpFragments, l:relaxedRegexpFragments]
+    return [join(l:strictRegexpFragments, ''), join(l:relaxedRegexpFragments, '')]
 endfunction
 function! s:BuildKeywordRegexpFragment( anchor )
     " A strict keyword fragment consists of the keyword anchor optionally
     " followed by anything that is not a CamelCase or underscore fragment. 
-    let l:strictRegexpFragment = a:anchor . '\%(_\@!\k\&\U\)\*'
+    let l:strictRegexpFragment = a:anchor . '\%(_\@!\k\&\A\)\*'
 
     " A relaxed keyword fragment can also be followed by uppercase characters
     " and can swallow underscores. 
-    let l:relaxedRegexpFragment = a:anchor . '\k\*'
+    let l:relaxedRegexpFragment = a:anchor . '\%(\k\&\L\)\*'
     
     return [l:strictRegexpFragment, l:relaxedRegexpFragment]
 endfunction
@@ -270,44 +270,47 @@ function! s:BuildRegexp( base )
     " CamelCaseWord or underscore_word. 
     " All other (keyword) characters must just match at that position. 
     let l:anchors = map(split(a:base, '\zs'), 'escape(v:val, "\\")')
-    let l:alphabeticAnchors = filter(copy(l:anchors), 's:IsAlpha(v:val)')
-
-    let [l:strictRegexpFragments, l:relaxedRegexpFragments] = s:BuildAlphabeticRegexpFragments(l:alphabeticAnchors)
 
     " Assemble all regexp fragments together to build the full regexp. 
     " There is a strict regexp which is tried first and a relaxed regexp to fall
     " back on. 
-    " If an anchor is alphabetic, include the built regexp fragment. 
-    " If an anchor is a keyword character, just match that character. 
     let l:strictRegexp = ''
     let l:relaxedRegexp = ''
-    for l:anchor in l:anchors
+    let l:idx = 0
+    let l:alphabeticCnt = 0
+    while l:idx < len(l:anchors)
+	let l:anchor = l:anchors[l:idx]
 	if s:IsAlpha(l:anchor)
-	    if len(l:strictRegexpFragments) > 0
-		let l:strictRegexp  .= remove(l:strictRegexpFragments, 0)
-	    endif
-	    if len(l:relaxedRegexpFragments) > 0
-		let l:relaxedRegexp .= remove(l:relaxedRegexpFragments, 0)
-	    endif
-"****D echomsg '####' l:anchor
+	    " If an anchor is alphabetic, build a regexp fragment from it and
+	    " all following alphabetic anchors. We cannot just concatenate
+	    " individual regexp fragments because the regexp is different. 
+	    let l:alphabeticAnchors = [l:anchor]
+	    let l:alphabeticCnt += 1
+	    while s:IsAlpha(get(l:anchors, l:idx + 1, ''))
+		let l:idx += 1
+		let l:alphabeticCnt += 1
+		call add(l:alphabeticAnchors, l:anchors[l:idx])
+	    endwhile
+	    let [l:strictRegexpFragment, l:relaxedRegexpFragment] = s:BuildAlphabeticRegexpFragments(l:alphabeticAnchors)
+echomsg '####' join(l:alphabeticAnchors)
 	else
+	    " If an anchor is a keyword character, just match that character. 
 	    let [l:strictRegexpFragment, l:relaxedRegexpFragment] = s:BuildKeywordRegexpFragment(l:anchor)
-	    let l:strictRegexp  .= l:strictRegexpFragment
-	    let l:relaxedRegexp .= l:relaxedRegexpFragment
-"****D echomsg '####' '"'. l:anchor . '"'
+echomsg '####' '"'. l:anchor . '"'
 	endif
-    endfor
+
+	let l:strictRegexp  .= l:strictRegexpFragment
+	let l:relaxedRegexp .= l:relaxedRegexpFragment
+	let l:idx += 1
+    endwhile
 
     " Each alphabetic anchor results in one fragment; there still is one
     " fragment to match any CamelCaseWords and underscore_words when there are
     " no alphabetic anchors. 
-    if len(l:alphabeticAnchors) == 0
-	if len(l:strictRegexpFragments) > 0
-	    let l:strictRegexp  .= remove(l:strictRegexpFragments, 0)
-	endif
-	if len(l:relaxedRegexpFragments) > 0
-	    let l:relaxedRegexp .= remove(l:relaxedRegexpFragments, 0)
-	endif
+    if l:alphabeticCnt == 0
+	let [l:strictRegexpFragment, l:relaxedRegexpFragment] = s:BuildAlphabeticRegexpFragments([])
+	let l:strictRegexp  .= l:strictRegexpFragment
+	let l:relaxedRegexp .= l:relaxedRegexpFragment
     endif
 
 "****D return [s:WholeWordMatch(l:strictRegexp), '']
