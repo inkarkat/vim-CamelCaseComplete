@@ -32,10 +32,11 @@
 "
 "   The search for completions honors the 'ignorecase' and 'smartcase' settings
 "   for underscore_words. Without 'ignorecase', "ai" will only match
-"   "an_identifier" and "AI" -> "AN_Identifier". Case doesn't matter for
-"   CamelCaseWords, the first fragment can start with either lower or upper
-"   case; all subsequent fragments must start with an uppercase letter. Thus,
-"   you do not need to type "aCCW" to get "aCamelCaseWord"; "accw" will do, too. 
+"   "an_identifier" and "AI" -> "AN_Identifier". For CamelCaseWords, the first
+"   fragment must start with the same case as used in the first typed letter
+"   (unless 'ignorecase'); all subsequent fragments must start with an uppercase
+"   letter. Thus, you do not need to type "aCCW" to get "aCamelCaseWord"; "accw"
+"   will do, too. To get "TheCamelCaseWord", type either "Tccw" or "TCCW". 
 "
 " INSTALLATION:
 " DEPENDENCIES:
@@ -66,6 +67,12 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	011	07-Dec-2011	CHG: Do a default match for the anchor of
+"				the first CamelCase fragment, not always a
+"				case-insensitive match. This way, with
+"				'noignorecase', "acw" will only match
+"				"aCamelWord" and "Tcw"will only match
+"				"TheCamelWord".  
 "	010	02-Nov-2011	FIX: Do not clobber unnamed register when
 "				removing base keys. 
 "	009	30-Sep-2011	Use <silent> for <Plug> mapping instead of
@@ -158,7 +165,7 @@ function! s:BuildAlphabeticRegexpFragments( anchors )
     " distinction. We also cannot force case sensitivity via /\C/, because that
     " would apply to the entire pattern and thus also to the underscore_words. 
     let l:camelCaseAnchors = 
-    \	[ (printf('\[%s%s]', tolower(a:anchors[0]), toupper(a:anchors[0]))) ] +
+    \	[ a:anchors[0]] +
     \	map(a:anchors[1:], '"\\%(" . toupper(v:val) . "\\&\\u\\)"')
 
     " With just one anchor, build a regexp that matches any CamelCaseWord or
