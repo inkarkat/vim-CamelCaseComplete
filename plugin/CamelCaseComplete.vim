@@ -142,23 +142,24 @@ function! s:GetCompleteOption()
     return (exists('b:CamelCaseComplete_complete') ? b:CamelCaseComplete_complete : g:CamelCaseComplete_complete)
 endfunction
 
+function! s:BuildAnyMatchFragment()
+    " Without any anchors, build a regexp that matches any CamelCaseWord or
+    " underscore_word. 
+    let l:anyFragmentRegexp = 
+    \   '\%(' .
+    \	'\k\*\%(_\@!\k\&\U\)\k\*\u\k\+' .
+    \   '\|' .
+    \	'_\*\k\*\%(_\@!\k\)_\+\%(_\@!\k\)\%(\k\|_\)\*' .
+    \   '\)'
+    return [l:anyFragmentRegexp, l:anyFragmentRegexp]
+endfunction
 function! s:BuildAlphabeticRegexpFragments( anchors )
+    if len(a:anchors) == 0 | throw 'ASSERT: Must pass anchors.' | endif
+
     " We need at least two anchors to be able to build an exact match for
     " CamelCaseWords or underscore_words. If we have less than that, build
     " regexps that match anything resembling CamelCaseWords / underscore_words. 
     "
-    " Without any anchors, build a regexp that matches any CamelCaseWord or
-    " underscore_word. 
-    if len(a:anchors) == 0
-	let l:anyFragmentRegexp = 
-	\   '\%(' .
-	\	'\k\*\%(_\@!\k\&\U\)\k\*\u\k\+' .
-	\   '\|' .
-	\	'_\*\k\*\%(_\@!\k\)_\+\%(_\@!\k\)\%(\k\|_\)\*' .
-	\   '\)'
-	return [l:anyFragmentRegexp, l:anyFragmentRegexp]
-    endif
-
     " The CamelCaseWord may start with either lower or uppercase; each following
     " CamelCase anchor one must match an uppercase character, except when it is
     " preceded by non-alphabetic keyword characters. I.e. we recognize in
@@ -308,7 +309,7 @@ echomsg '####' '"'. l:anchor . '"'
     " fragment to match any CamelCaseWords and underscore_words when there are
     " no alphabetic anchors. 
     if l:alphabeticCnt == 0
-	let [l:strictRegexpFragment, l:relaxedRegexpFragment] = s:BuildAlphabeticRegexpFragments([])
+	let [l:strictRegexpFragment, l:relaxedRegexpFragment] = s:BuildAnyMatchFragment()
 	let l:strictRegexp  .= l:strictRegexpFragment
 	let l:relaxedRegexp .= l:relaxedRegexpFragment
     endif
