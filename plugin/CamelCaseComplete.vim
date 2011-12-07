@@ -165,7 +165,7 @@ function! s:BuildSingleAlphabeticAnchorFragment( anchor )
     \   '\)'
     return [l:singleAnchorFragmentRegexp, l:singleAnchorFragmentRegexp]
 endfunction
-function! s:BuildAlphabeticRegexpFragments( isStartFragment, anchors )
+function! s:BuildAlphabeticRegexpFragments( anchors )
     " We need at least two anchors in total to be able to build an exact match
     " for CamelCaseWords or underscore_words. 
     if len(a:anchors) < 1 | throw 'ASSERT: Must pass at least one anchor.' | endif
@@ -177,11 +177,9 @@ function! s:BuildAlphabeticRegexpFragments( isStartFragment, anchors )
     " Note: We cannot simply use toupper(); 'ignorecase' may suspend this
     " distinction. We also cannot force case sensitivity via /\C/, because that
     " would apply to the entire pattern and thus also to the underscore_words. 
-    let l:camelCaseConversion = '"\\%(" . toupper(v:val) . "\\&\\u\\|\\%(\\k\\&\\A\\)\\+" . v:val . "\\)"'
-    let l:camelCaseAnchors = (a:isStartFragment ?
-    \	[ a:anchors[0]] + map(a:anchors[1:], l:camelCaseConversion) :
-    \	map(copy(a:anchors), l:camelCaseConversion)
-    \)
+    let l:camelCaseAnchors = 
+    \	[ a:anchors[0]] +
+    \	map(a:anchors[1:], '"\\%(" . toupper(v:val) . "\\&\\u\\|\\%(\\k\\&\\A\\)\\+" . v:val . "\\)"')
 
     " A strict CamelCase fragment consists of the CamelCase anchor followed by
     " non-uppercase keyword characters without '_', or the uppercase anchor
@@ -279,7 +277,6 @@ function! s:BuildRegexp( base )
     let l:relaxedRegexp = ''
     let l:idx = 0
     let l:alphabeticAnchorSequence = []
-    let l:isStartAlphabeticFragment = 1
     while l:idx < len(l:anchors)
 	let l:anchor = l:anchors[l:idx]
 	if s:IsAlpha(l:anchor)
@@ -299,9 +296,7 @@ echomsg '####' l:anchor
 		    call add(l:alphabeticAnchorSequence, l:anchors[l:idx])
 		endwhile
 		let [l:strictRegexpFragment, l:relaxedRegexpFragment] =
-		\   s:BuildAlphabeticRegexpFragments(l:isStartAlphabeticFragment, l:alphabeticAnchorSequence)
-
-		let l:isStartAlphabeticFragment = 0
+		\   s:BuildAlphabeticRegexpFragments(l:alphabeticAnchorSequence)
 echomsg '####' join(l:alphabeticAnchorSequence)
 	    endif
 	else
