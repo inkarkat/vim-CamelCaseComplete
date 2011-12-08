@@ -1,6 +1,5 @@
 " Test: Completion with augmented iskeyword. 
 
-runtime plugin/CamelCaseComplete.vim
 source ../helpers/completetest.vim
 call vimtest#StartTap()
 call vimtap#Plan(8) 
