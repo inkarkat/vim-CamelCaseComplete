@@ -188,7 +188,12 @@ function! s:BuildAlphabeticRegexpFragments( isStartFragment, isAfterKeywordFragm
     " A relaxed underscore_word fragment can also swallow underscores for which
     " no anchor was provided. 
     let l:underscoreRelaxedFragments =
-    \	['_\*' . a:anchors[0] . '\k\+\%(_\|\k\&\A\)\@='] +
+    \	[
+    \	    (a:isAfterKeywordFragment ?
+    \		'\%(_\@!\k\&\A\)\@<=' . '_\*' . a:anchors[0] . '\k\+\%(\%(_\|\k\&\A\)\@=\|_\k\+\)' :
+    \		'_\*' . a:anchors[0] . '\k\+\%(_\|\k\&\A\)\@='
+    \	    )
+    \	] +
     \	map(a:anchors[1:], '''_\+'' . v:val . ''\k\+''')
 
     " Each fragment must match either one part of a CamelCaseWord or
@@ -197,6 +202,8 @@ function! s:BuildAlphabeticRegexpFragments( isStartFragment, isAfterKeywordFragm
     let l:strictRegexpFragments = []
     let l:relaxedRegexpFragments = []
     for l:i in range(len(a:anchors))
+	"call add(l:strictRegexpFragments, '\%(' . l:underscoreStrictFragments[l:i]  . '\)')
+	"call add(l:relaxedRegexpFragments, '\%(' . l:underscoreRelaxedFragments[l:i] . '\)')
 	call add(l:strictRegexpFragments, '\%(' . l:camelCaseStrictFragments[l:i]  . '\|' . l:underscoreStrictFragments[l:i]  . '\)')
 	call add(l:relaxedRegexpFragments, '\%(' . l:camelCaseRelaxedFragments[l:i] . '\|' . l:underscoreRelaxedFragments[l:i] . '\)')
     endfor
