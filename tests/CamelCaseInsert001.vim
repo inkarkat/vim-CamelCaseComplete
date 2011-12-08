@@ -4,6 +4,8 @@ source ../helpers/insert.vim
 view CamelCaseComplete.txt
 new
 
+call SetCompletion("\<C-x>\<C-c>")
+
 call Insert('fmicw', 0)
 call Insert('fmiow', 0)
 normal! o
