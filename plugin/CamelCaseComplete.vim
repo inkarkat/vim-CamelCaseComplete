@@ -236,10 +236,10 @@ function! s:BuildRegexp( base )
 	let l:anchor = l:anchors[l:idx]
 	if s:IsAlpha(l:anchor)
 	    let l:alphabeticAnchorSequence = [l:anchor]
-	    if len(l:totalAlphabeticAnchors) == 1
+	    if len(l:totalAlphabeticAnchors) == 1 && l:idx == len(l:anchors) - 1
 		" With just one alphabetic anchor at all, build special regexps
 		" that match anything resembling CamelCaseWords /
-		" underscore_words. 
+		" underscore_words, unless a keyword anchor still follows. 
 		let [l:strictRegexpFragment, l:relaxedRegexpFragment] = s:BuildSingleAlphabeticAnchorFragment(l:anchor)
 echomsg '####' l:isStartAlphabeticFragment l:isAfterKeywordFragment l:anchor
 	    else
