@@ -100,13 +100,16 @@ function! s:BuildAnyMatchFragment()
     \   '\)'
     return [l:anyFragmentRegexp, l:anyFragmentRegexp]
 endfunction
-function! s:BuildSingleAlphabeticAnchorFragment( anchor )
+function! s:BuildSingleAlphabeticAnchorFragment( isAfterKeywordFragment, anchor )
     " With just one anchor, build a regexp that matches any CamelCaseWord or
     " underscore_word starting with the anchor (possibly preceded by leading
     " underscore(s)). 
     let l:singleAnchorFragmentRegexp = 
     \   '\%(' .
-    \	a:anchor . '\%(_\@!\k\)\*\%(_\@!\k\&\U\)\%(_\@!\k\)\*\u\k\+' .
+    \	(a:isAfterKeywordFragment ?
+    \	    '\%(\%(_\@!\k\&\A\)\@<=' . a:anchor . '\|\l\+' . s:ToCamelCaseAnchor(a:anchor) . '\)' . '\%(_\@!\k\)\*_\@!' :
+    \	    a:anchor . '\%(_\@!\k\)\*\%(_\@!\k\&\U\)\%(_\@!\k\)\*\u\k\+'
+    \	) .
     \   '\|' .
     \	'_\*' . a:anchor . '\k\*\%(_\@!\k\)_\+\%(_\@!\k\)\%(\k\|_\)\*' .
     \   '\)'
@@ -185,7 +188,7 @@ function! s:BuildAlphabeticRegexpFragments( isStartFragment, isAfterKeywordFragm
     " A relaxed underscore_word fragment can also swallow underscores for which
     " no anchor was provided. 
     let l:underscoreRelaxedFragments =
-    \	['_\*' . a:anchors[0] . '\k\+_\@='] +
+    \	['_\*' . a:anchors[0] . '\k\+\%(_\|\k\&\A\)\@='] +
     \	map(a:anchors[1:], '''_\+'' . v:val . ''\k\+''')
 
     " Each fragment must match either one part of a CamelCaseWord or
@@ -240,8 +243,8 @@ function! s:BuildRegexp( base )
 		" With just one alphabetic anchor at all, build special regexps
 		" that match anything resembling CamelCaseWords /
 		" underscore_words, unless a keyword anchor still follows. 
-		let [l:strictRegexpFragment, l:relaxedRegexpFragment] = s:BuildSingleAlphabeticAnchorFragment(l:anchor)
-echomsg '####' l:isStartAlphabeticFragment l:isAfterKeywordFragment l:anchor
+		let [l:strictRegexpFragment, l:relaxedRegexpFragment] = s:BuildSingleAlphabeticAnchorFragment(l:isAfterKeywordFragment, l:anchor)
+echomsg '####' l:isStartAlphabeticFragment l:isAfterKeywordFragment 's:' . l:anchor
 	    else
 		" If an anchor is alphabetic, build a regexp fragment from it and
 		" all following alphabetic anchors. We cannot just concatenate
