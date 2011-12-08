@@ -1,65 +1,9 @@
 " CamelCaseComplete.vim: Insert mode completion that expands CamelCaseWords and
 " underscore_words based on anchor characters for each word fragment. 
 "
-" DESCRIPTION:
-"   This plugin offers a keyword completion that is limited to identifiers which
-"   adhere to either CamelCase ("anIdentifier") or underscore_notation
-"   ("an_identifier") naming conventions. This often results in a single (or
-"   very few) matches and thus allows quick completion of function, class and
-"   variable names.
-"   The list of completion candidates can be restricted by triggering completion
-"   on all or some of the initial letters of each word fragment; e.g. "vlcn"
-"   would expand to "VeryLongClassName" and "verbose_latitude_correction_numeric".
-"   Non-alphabetic keyword characters can be thrown in, too, to narrow down the
-"   number of matches. 
-"
-" USAGE:
-" <i_CTRL-X_CTRL-C>	Find matches for CamelCaseWords and underscore_words
-"			whose individual word fragments begin with the typed
-"			letters in front of the cursor. 
-"
-"   The initial letter of the first fragment must always be included; initial
-"   letters of subsequent fragments can, but need not be specified. If there are
-"   matches where each fragment starts with one typed letter (e.g. "jaev" ->
-"   "justAnExampleVar"), only those strict matches are offered. Otherwise, a
-"   relaxed search for completions will also include matches where some
-"   fragments have no representation in the typed letters (e.g. "je" ->
-"   "justAnExampleVar"). In short: Type all initial letters for a precise and
-"   narrow completion, or just a few initial letters (but always the first!)
-"   when there are too many fragments (e.g. "avl" ->
-"   "aVeryLongVarWithTooManyFragments") or the match is non-ambiguous, anyway
-"   (e.g. "xz" -> "xVariableUsedForZipping"). 
-"
-"   The search for completions honors the 'ignorecase' and 'smartcase' settings
-"   for underscore_words. Without 'ignorecase', "ai" will only match
-"   "an_identifier" and "AI" -> "AN_Identifier". For CamelCaseWords, the first
-"   fragment must start with the same case as used in the first typed letter
-"   (unless 'ignorecase'); all subsequent fragments must start with an uppercase
-"   letter. Thus, you do not need to type "aCCW" to get "aCamelCaseWord"; "accw"
-"   will do, too. To get "TheCamelCaseWord", type either "Tccw" or "TCCW". 
-"
-" INSTALLATION:
 " DEPENDENCIES:
 "   - Requires Vim 7.1 or higher. 
 "   - CompleteHelper.vim autoload script. 
-"
-" CONFIGURATION:
-"   Analoguous to the 'complete' option, you can specify which buffers will be
-"   scanned for completion candidates. Currently, only '.' (current buffer) and
-"   'w' (buffers from other windows) are supported. >
-"	let g:CamelCaseComplete_complete string = '.,w'
-"   The global setting can be overridden for a particular buffer
-"   (b:CamelCaseComplete_complete). 
-"
-"   To disable the removal of the (mostly useless) completion base when there
-"   are no matches: >
-"	let g:CamelCaseComplete_FindStartMark = ''
-"	
-" INTEGRATION:
-" LIMITATIONS:
-" ASSUMPTIONS:
-" KNOWN PROBLEMS:
-" TODO:
 "
 " Copyright: (C) 2009-2011 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
@@ -208,10 +152,12 @@ function! s:BuildAlphabeticRegexpFragments( isStartFragment, isAfterKeywordFragm
     " followed by an underscore character; otherwise, this would make the match
     " at the beginning of a underscore_word always case insensitive.
     let l:camelCaseRelaxedFragments =
-    \	[(a:isStartFragment ? a:anchors[0] :
-    \	    (a:isAfterKeywordFragment ?
-    \		'\%(\%(_\@!\k\&\A\)\@<=' . a:anchors[0] . '\|\l\+' . s:ToCamelCaseAnchor(a:anchors[0]) . '\)' :
-    \		l:camelCaseAnchors[0])
+    \	[
+    \	    (a:isStartFragment ?
+    \		a:anchors[0] :
+    \		(a:isAfterKeywordFragment ?
+    \		    '\%(\%(_\@!\k\&\A\)\@<=' . a:anchors[0] . '\|\l\+' . s:ToCamelCaseAnchor(a:anchors[0]) . '\)' :
+    \		    l:camelCaseAnchors[0])
     \	    ) . '\%(_\@!\k\)\*_\@!'
     \	] +
     \	map(l:camelCaseAnchors[1:], '''\%(\U\@<='' . v:val . ''\k\*\|'' . v:val . ''\l\k\*\)''')
@@ -275,7 +221,7 @@ function! s:BuildRegexp( base )
     " CamelCaseWord or underscore_word. 
     " All other (keyword) characters must just match at that position. 
     let l:anchors = map(split(a:base, '\zs'), 'escape(v:val, "\\")')
-    let l:alphabeticAnchors = filter(copy(l:anchors), 's:IsAlpha(v:val)')
+    let l:totalAlphabeticAnchors = filter(copy(l:anchors), 's:IsAlpha(v:val)')
 
     " Assemble all regexp fragments together to build the full regexp. 
     " There is a strict regexp which is tried first and a relaxed regexp to fall
@@ -289,7 +235,8 @@ function! s:BuildRegexp( base )
     while l:idx < len(l:anchors)
 	let l:anchor = l:anchors[l:idx]
 	if s:IsAlpha(l:anchor)
-	    if len(l:alphabeticAnchors) == 1
+	    let l:alphabeticAnchorSequence = [l:anchor]
+	    if len(l:totalAlphabeticAnchors) == 1
 		" With just one alphabetic anchor at all, build special regexps
 		" that match anything resembling CamelCaseWords /
 		" underscore_words. 
@@ -299,7 +246,6 @@ echomsg '####' l:isStartAlphabeticFragment l:isAfterKeywordFragment l:anchor
 		" If an anchor is alphabetic, build a regexp fragment from it and
 		" all following alphabetic anchors. We cannot just concatenate
 		" individual regexp fragments because the regexp is different. 
-		let l:alphabeticAnchorSequence = [l:anchor]
 		while s:IsAlpha(get(l:anchors, l:idx + 1, ''))
 		    let l:idx += 1
 		    call add(l:alphabeticAnchorSequence, l:anchors[l:idx])
