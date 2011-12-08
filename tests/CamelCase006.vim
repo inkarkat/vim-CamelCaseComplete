@@ -1,6 +1,5 @@
 " Test: Completion base includes non-alphabetic characters. 
 
-runtime plugin/CamelCaseComplete.vim
 source ../helpers/completetest.vim
 call vimtest#StartTap()
 call vimtap#Plan(16) 
