@@ -9,23 +9,23 @@ new
 
 call SetCompletion("\<C-x>\<C-c>")
 
-call Insert('fmicw', 0)
-call Insert('--fmicw', 0)
+call Insert('Fmicw', 0)
+call Insert('--Fmicw', 0)
 normal! o
 setlocal iskeyword+=:
-call Insert('gvscocc', 0)
+call Insert('Gvscocc', 0)
 wincmd p | setlocal iskeyword+=: | wincmd p
 call Insert('imtr', 0)
-call Insert('sgvcocc', 0)
-call Insert('s:gvcocc', 1)
+call Insert('sGvcocc', 0)
+call Insert('s:Gvcocc', 1)
 normal! o
-call Insert('elelp', 0)
+call Insert('Elelp', 0)
 wincmd p | setlocal iskeyword+=# | wincmd p
-call Insert('elelp', 0)
+call Insert('Elelp', 0)
 normal! o
-call Insert('ews#tt', 0)
+call Insert('ews#Tt', 0)
 setlocal iskeyword+=#
-call Insert('ews#tt', 0)
+call Insert('Ews#Tt', 0)
 
 
 call vimtest#SaveOut()
