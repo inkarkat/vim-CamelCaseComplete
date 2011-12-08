@@ -1,6 +1,5 @@
 " Test: Completion of CamelCase words when '_' is not a keyword character; 
 
-runtime plugin/CamelCaseComplete.vim
 source ../helpers/completetest.vim
 call vimtest#StartTap()
 call vimtap#Plan(10) 
