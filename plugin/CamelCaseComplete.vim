@@ -11,6 +11,24 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	012	09-Dec-2011	ENH: Try to weed out many corner case bugs,
+"				especially when non-alphabetic keyword
+"				characters are included. 
+"				Strip the 0 and 1-anchor cases out of
+"				s:BuildAlphabeticRegexpFragments() into
+"				s:BuildAnyMatchFragment() and
+"				s:BuildSingleAlphabeticAnchorFragment(). 
+"				Change the overall algorithm so that only
+"				sequences of alphabetic anchors are converted
+"				into a regexp, not the complete set. Consider
+"				corner cases of start of the alphabetic
+"				sequence and a new alphabetic sequence after a
+"				keyword fragment. 
+"				New test CamelKeyword001.vim covers all
+"				combinations; I hope this proves helpful in
+"				practice. I'm afraid the regexp generation has
+"				started a life of its own, and I hope I never
+"				have to look into it again :-(  
 "	011	07-Dec-2011	CHG: Do a default match for the anchor of
 "				the first CamelCase fragment, not always a
 "				case-insensitive match. This way, with
@@ -160,10 +178,10 @@ function! s:BuildAlphabeticRegexpFragments( isStartFragment, isAfterKeywordFragm
     \		a:anchors[0] :
     \		(a:isAfterKeywordFragment ?
     \		    '\%(\%(_\@!\k\&\A\)\@<=' . a:anchors[0] . '\|\l\+' . s:ToCamelCaseAnchor(a:anchors[0]) . '\)' :
-    \		    l:camelCaseAnchors[0])
+    \		    '_\@<!' . l:camelCaseAnchors[0])
     \	    ) . '\%(_\@!\k\)\*_\@!'
     \	] +
-    \	map(l:camelCaseAnchors[1:], '''\%(\U\@<='' . v:val . ''\k\*\|'' . v:val . ''\l\k\*\)''')
+    \	map(l:camelCaseAnchors[1:], '''\%(\%(_\@!\U\)\@<='' . v:val . ''\k\*\|_\@<!'' . v:val . ''\l\k\*\)''')
 
     " A strict underscore_word fragment consists of either
     " a) the anchor preceded by underscore(s) (except for the first fragment,
@@ -190,7 +208,7 @@ function! s:BuildAlphabeticRegexpFragments( isStartFragment, isAfterKeywordFragm
     let l:underscoreRelaxedFragments =
     \	[
     \	    (a:isAfterKeywordFragment ?
-    \		'\%(_\@!\k\&\A\)\@<=' . '_\*' . a:anchors[0] . '\k\+\%(\%(_\|\k\&\A\)\@=\|_\k\+\)' :
+    \		'\%(_\@!\k\&\A\)\@<=' . '_\*' . a:anchors[0] . '\k\+\%(\%(_\|\k\&\A\)\@=\|_\k\+\)\|_\+' . a:anchors[0] . '\k\+' :
     \		'_\*' . a:anchors[0] . '\k\+\%(_\|\k\&\A\)\@='
     \	    )
     \	] +
@@ -202,6 +220,8 @@ function! s:BuildAlphabeticRegexpFragments( isStartFragment, isAfterKeywordFragm
     let l:strictRegexpFragments = []
     let l:relaxedRegexpFragments = []
     for l:i in range(len(a:anchors))
+	"call add(l:strictRegexpFragments, '\%(' . l:camelCaseStrictFragments[l:i]  . '\)')
+	"call add(l:relaxedRegexpFragments, '\%(' . l:camelCaseRelaxedFragments[l:i] . '\)')
 	"call add(l:strictRegexpFragments, '\%(' . l:underscoreStrictFragments[l:i]  . '\)')
 	"call add(l:relaxedRegexpFragments, '\%(' . l:underscoreRelaxedFragments[l:i] . '\)')
 	call add(l:strictRegexpFragments, '\%(' . l:camelCaseStrictFragments[l:i]  . '\|' . l:underscoreStrictFragments[l:i]  . '\)')
@@ -251,7 +271,7 @@ function! s:BuildRegexp( base )
 		" that match anything resembling CamelCaseWords /
 		" underscore_words, unless a keyword anchor still follows. 
 		let [l:strictRegexpFragment, l:relaxedRegexpFragment] = s:BuildSingleAlphabeticAnchorFragment(l:isAfterKeywordFragment, l:anchor)
-echomsg '####' l:isStartAlphabeticFragment l:isAfterKeywordFragment 's:' . l:anchor
+"****D echomsg '####' l:isStartAlphabeticFragment l:isAfterKeywordFragment 's:' . l:anchor
 	    else
 		" If an anchor is alphabetic, build a regexp fragment from it and
 		" all following alphabetic anchors. We cannot just concatenate
@@ -263,7 +283,7 @@ echomsg '####' l:isStartAlphabeticFragment l:isAfterKeywordFragment 's:' . l:anc
 		let [l:strictRegexpFragment, l:relaxedRegexpFragment] =
 		\   s:BuildAlphabeticRegexpFragments(l:isStartAlphabeticFragment, l:isAfterKeywordFragment, l:alphabeticAnchorSequence)
 
-echomsg '####' l:isStartAlphabeticFragment l:isAfterKeywordFragment join(l:alphabeticAnchorSequence)
+"****D echomsg '####' l:isStartAlphabeticFragment l:isAfterKeywordFragment join(l:alphabeticAnchorSequence)
 	    endif
 	    let l:isStartAlphabeticFragment = 0
 	    let l:isAfterKeywordFragment = 0
@@ -272,7 +292,7 @@ echomsg '####' l:isStartAlphabeticFragment l:isAfterKeywordFragment join(l:alpha
 	    let [l:strictRegexpFragment, l:relaxedRegexpFragment] = s:BuildKeywordRegexpFragment(l:anchor)
 	    let l:alphabeticAnchorSequence = []	" Reset. 
 	    let l:isAfterKeywordFragment = 1
-echomsg '####' '"'. l:anchor . '"'
+"****D echomsg '####' '"'. l:anchor . '"'
 	endif
 
 	let l:strictRegexp  .= l:strictRegexpFragment
@@ -287,7 +307,7 @@ echomsg '####' '"'. l:anchor . '"'
 	let [l:strictRegexpFragment, l:relaxedRegexpFragment] = s:BuildAnyMatchFragment()
 	let l:strictRegexp  .= l:strictRegexpFragment
 	let l:relaxedRegexp .= l:relaxedRegexpFragment
-echomsg '#### ...'
+"****D echomsg '#### ...'
     endif
 
 "****D return [s:WholeWordMatch(l:strictRegexp), '']
@@ -314,7 +334,7 @@ function! CamelCaseComplete#CamelCaseComplete( findstart, base )
 	return l:startCol - 1 " Return byte index, not column. 
     else
 	let [l:strictRegexp, l:relaxedRegexp] = s:BuildRegexp(a:base)
-let [g:sr, g:rr] = [l:strictRegexp, l:relaxedRegexp]
+"****D let [g:sr, g:rr] = [l:strictRegexp, l:relaxedRegexp]
 	if empty(l:strictRegexp) | throw 'ASSERT: At least a strict regexp should have been built.' | endif
 
 	" Find keywords matching the prepared regexp. Use the relaxed regexp
