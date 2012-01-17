@@ -53,8 +53,9 @@ function! EchoWithoutScrolling#EchoMsgWithHl( highlightGroup, text )
 function! EchoWithoutScrolling#TranslateLineBreaks( text )
 
 MyWorldIn::Spanish MyWorldIn::Turkey
-@Ola!TiggleMe:TaggleMe:ToggleMe
-@HeyHo!TiggleMe:TaggleMe:ToggleMe @HeyHo!TickMeTockMeTuckMe
+@...!TiggleMe:TaggleMe:ToggleMe	     !Boy!wiggle_me:waggle_me:woggle_me
+@Hallo!TiggleMe:TaggleMe:ToggleMe    @Hallo!Tiggle_Me:Taggle_Me:Toggle_Me
+@HeyHo!TiggleMe:TaggleMe:ToggleMe    @HeyHo!TickMeTockMeTuckMe
 @HeyHo!Tiggle_Me:Taggle_Me:Toggle_Me @HeyHo!Tick_Me_Tock_Me_Tuck_Me
 
 MINIMAL: An identifierInCamelCase or preferring_underscore_words?
