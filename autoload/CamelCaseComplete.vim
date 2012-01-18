@@ -4,12 +4,17 @@
 " DEPENDENCIES:
 "   - CompleteHelper.vim autoload script. 
 "
-" Copyright: (C) 2009-2011 Ingo Karkat
+" Copyright: (C) 2009-2012 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"	014	18-Jan-2012	ENH: Add
+"				g:CamelCaseComplete_CaseInsensitiveFallback:
+"				When the completion base is all-lowercase, try
+"				strict-noic -> strict-ic -> relaxed-noic ->
+"				relaxed-ic fallback. 
 "	013	11-Dec-2011	Split off functions into separate autoload
 "				script. 
 "	012	09-Dec-2011	ENH: Try to weed out many corner case bugs,
@@ -301,6 +306,27 @@ function! s:BuildRegexp( base )
     " relaxed regexp to avoid searching for (no existing) matches twice. 
     return [s:WholeWordMatch(l:strictRegexp), (l:relaxedRegexp ==# l:strictRegexp ? '' : s:WholeWordMatch(l:relaxedRegexp))]
 endfunction
+function! s:IsSmartCaseFallback( base )
+    return g:CamelCaseComplete_CaseInsensitiveFallback && ! &ignorecase && a:base !~# '\u'
+endfunction
+function! s:FindMatches( matches, regexp, searchDescription, isIgnoreCase)
+    if ! empty(a:searchDescription)
+	echohl ModeMsg
+	echo printf('-- User defined completion (^U^N^P) -- %s %ssearch...', a:searchDescription, (a:isIgnoreCase ? 'case-insensitive ' : ''))
+	echohl None
+    endif
+
+    if a:isIgnoreCase
+	set ignorecase
+    endif
+    try
+	call CompleteHelper#FindMatches( a:matches, a:regexp, {'complete': s:GetCompleteOption()} )
+    finally
+	if a:isIgnoreCase
+	    set noignorecase
+	endif
+    endtry
+endfunction
 function! CamelCaseComplete#CamelCaseComplete( findstart, base )
     if a:findstart
 	" Locate the start of the keyword that represents the initial letters. 
@@ -322,17 +348,20 @@ function! CamelCaseComplete#CamelCaseComplete( findstart, base )
 "****D let [g:sr, g:rr] = [l:strictRegexp, l:relaxedRegexp]
 	if empty(l:strictRegexp) | throw 'ASSERT: At least a strict regexp should have been built.' | endif
 
-	" Find keywords matching the prepared regexp. Use the relaxed regexp
-	" when the strict one doesn't yield any matches. 
+	" Find keywords matching the prepared regexp. Fall back to a
+	" case-insensitive search when there are no matches. Use the relaxed
+	" regexp when the strict one doesn't yield any matches, also with the
+	" fallback. 
 	let l:matches = []
-"****D echomsg '****strict ' l:strictRegexp
-	call CompleteHelper#FindMatches( l:matches, l:strictRegexp, {'complete': s:GetCompleteOption()} )
+	call s:FindMatches(l:matches, l:strictRegexp, '', 0)
+	if empty(l:matches) && s:IsSmartCaseFallback(a:base)
+	    call s:FindMatches(l:matches, l:strictRegexp, 'Strict', 1)
+	endif
 	if empty(l:matches) && ! empty(l:relaxedRegexp)
-"****D echomsg '****relaxed' l:relaxedRegexp
-	    echohl ModeMsg
-	    echo '-- User defined completion (^U^N^P) -- Relaxed search...'
-	    echohl None
-	    call CompleteHelper#FindMatches( l:matches, l:relaxedRegexp, {'complete': s:GetCompleteOption()} )
+	    call s:FindMatches(l:matches, l:relaxedRegexp, 'Relaxed', 0)
+	endif
+	if empty(l:matches) && ! empty(l:relaxedRegexp) && s:IsSmartCaseFallback(a:base)
+	    call s:FindMatches(l:matches, l:relaxedRegexp, 'Relaxed', 1)
 	endif
 	let s:isNoMatches = empty(l:matches)
 	return l:matches
