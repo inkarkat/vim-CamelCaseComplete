@@ -77,6 +77,18 @@ CTRL-X CTRL-C		Find matches for CamelCaseWords and underscore_words
 			    "aCCW", "accw" -> "aCamelCaseWord" ~
 			    "TCCW", "Tccw" -> "TheCamelCaseWord" ~
 
+			CASE-INSENSITIVE FALLBACK 
+			When no (strict or relaxed) matches are found in a
+			case-insensitive search (i.e. without 'ignorecase'
+			on), a case-insensitive search is attempted when the
+			completion base only consists of lowercase letters. 
+			Therefore, you do not necessarily need to capitalize
+			the completion base when the completion candidates
+			only exist in one upper-/lower-case spelling. 
+			    "tccw" -> "TheCamelCaseWord" ~
+			    (Unless "theCamelCaseWord" also exists.)
+			Cp. |g:CamelCaseComplete_CaseInsensitiveFallback|
+
 			NON-ALPHABETIC KEYWORD CHARACTERS
 			Each letter matches the beginning of a CamelCase or
 			underscore_word fragment. You can add non-letter
@@ -130,6 +142,13 @@ To disable the removal of the (mostly useless) completion base when there
 are no matches: >
     let g:CamelCaseComplete_FindStartMark = ''
 <	
+				 *g:CamelCaseComplete_CaseInsensitiveFallback*
+You can disable the fallback to a case-insensitive search when the completion
+base only contains lowercase letters. Then, (together with 'noignorecase'),
+the case of the first CamelWord fragment and all underscore_word fragments
+must always match exactly: >
+    let g:CamelCaseComplete_CaseInsensitiveFallback = 0
+<	
 ==============================================================================
 INTEGRATION				       *CamelCaseComplete-integration*
 
@@ -152,7 +171,7 @@ First published version.
 Started development. 
 
 ==============================================================================
-Copyright: (C) 2009-2011 Ingo Karkat
+Copyright: (C) 2009-2012 Ingo Karkat
 The VIM LICENSE applies to this script; see |copyright|. 
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
