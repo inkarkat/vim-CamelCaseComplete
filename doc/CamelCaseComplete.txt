@@ -1,6 +1,4 @@
-*CamelCaseComplete.txt* Insert mode completion that expands CamelCaseWords and
-			underscore_words based on anchor characters for each
-			word fragment. 
+*CamelCaseComplete.txt* Insert mode completion that expands CamelCaseWords and underscore_words based on anchor characters for each word fragment. 
 
 		    CAMEL CASE COMPLETE    by Ingo Karkat
 						       *CamelCaseComplete.vim*
@@ -8,7 +6,6 @@ description			|CamelCaseComplete-description|
 usage				|CamelCaseComplete-usage|
 installation			|CamelCaseComplete-installation|
 configuration			|CamelCaseComplete-configuration|
-integration			|CamelCaseComplete-integration|
 limitations			|CamelCaseComplete-limitations|
 known problems			|CamelCaseComplete-known-problems|
 todo				|CamelCaseComplete-todo|
@@ -29,13 +26,15 @@ Non-alphabetic keyword characters can be thrown in, too, to both widen the
 search to word fragments joined by the keywords (e.g. "joined#words") and to
 narrow down the number of CamelCase and underscore_word matches. 
 
-HOW IT WORKS								     *
-
 RELATED WORKS								     *
 
 - camelcasemotion (vimscript #1905) provides special motions ,w ,b and ,e
   through CamelCaseWords and underscore_notation and corresponding text
   objects. 
+- Loosely based on and similar to the "Custom keyword completion" from
+  http://vim.wikia.com/wiki/Custom_keyword_completion
+- Check out the CompleteHelper.vim plugin page (vimscript #3914) for a full
+  list of insert mode completions powered by it. 
 
 ==============================================================================
 USAGE						     *CamelCaseComplete-usage*
@@ -76,18 +75,29 @@ CTRL-X CTRL-C		Find matches for CamelCaseWords and underscore_words
 			type "aCCW"; "accw" will do, too. 
 			    "aCCW", "accw" -> "aCamelCaseWord" ~
 			    "TCCW", "Tccw" -> "TheCamelCaseWord" ~
+			When both 'ignorecase' and 'smartcase' are set, the
+			search for completions is case-insensitive unless the
+			completion base contains uppercase characters: 
+			    "ai" -> "an_identifier", "AN_Identifier" ~
+			    "AI" -> "AN_Identifier" ~
 
 			CASE-INSENSITIVE FALLBACK 
 			When no (strict or relaxed) matches are found in a
-			case-insensitive search (i.e. without 'ignorecase'
-			on), a case-insensitive search is attempted when the
-			completion base only consists of lowercase letters. 
+			case-sensitive ('noignorecase') search, a
+			case-insensitive search is attempted when the
+			completion base only consists of lowercase letters.
 			Therefore, you do not necessarily need to capitalize
 			the completion base when the completion candidates
 			only exist in one upper-/lower-case spelling. 
 			    "tccw" -> "TheCamelCaseWord" ~
 			    (Unless "theCamelCaseWord" also exists.)
 			Cp. |g:CamelCaseComplete_CaseInsensitiveFallback|
+			Note that this is slightly different from setting
+			'smartcase', which offers both (upper/lower) matches
+			when a lowercase completion base is given. The
+			fallback only offers the uppercase match when no
+			such lowercase match exists (and again a lowercase
+			completion base is given). 
 
 			NON-ALPHABETIC KEYWORD CHARACTERS
 			Each letter matches the beginning of a CamelCase or
@@ -100,7 +110,7 @@ CTRL-X CTRL-C		Find matches for CamelCaseWords and underscore_words
 			non-alphabetic keyword, it must be followed by a full
 			CamelWord or underscore_word: 
 			    "Cw!"  -> "CamelWord!MoreCamel" ~
-			    "Cw!"  -//-> "CamelWord!Word" ~
+			    "Cw!"  -> "" -/NOT/-> "CamelWord!Word" ~
 			You can also use a non-alphabetic keyword character in
 			the middle to match any words that are joined by the
 			keyword character, even though they are only similar
@@ -121,8 +131,8 @@ To uninstall, use the |:RmVimball| command.
 
 DEPENDENCIES				      *CamelCaseComplete-dependencies*
 
-- Requires Vim 7.0 or higher. 
-- Requires the CompleteHelper.vim plugin (vimscript #000). 
+- Requires Vim 7.1 or higher. 
+- Requires the CompleteHelper.vim plugin (vimscript #3914). 
 
 ==============================================================================
 CONFIGURATION				     *CamelCaseComplete-configuration*
@@ -150,9 +160,6 @@ must always match exactly: >
     let g:CamelCaseComplete_CaseInsensitiveFallback = 0
 <	
 ==============================================================================
-INTEGRATION				       *CamelCaseComplete-integration*
-
-==============================================================================
 LIMITATIONS				       *CamelCaseComplete-limitations*
 
 KNOWN PROBLEMS				    *CamelCaseComplete-known-problems*
@@ -164,7 +171,7 @@ IDEAS						     *CamelCaseComplete-ideas*
 ==============================================================================
 HISTORY						   *CamelCaseComplete-history*
 
-1.00	09-Dec-2011
+1.00	01-Feb-2012
 First published version. 
 
 0.01	08-Jun-2009
