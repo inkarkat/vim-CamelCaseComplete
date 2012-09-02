@@ -5,12 +5,17 @@
 "   - Requires Vim 7.1 or higher. 
 "   - CamelCaseComplete.vim autoload script. 
 "
-" Copyright: (C) 2009-2011 Ingo Karkat
+" Copyright: (C) 2009-2012 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'. 
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.00.014	18-Jan-2012	ENH: Add
+"				g:CamelCaseComplete_CaseInsensitiveFallback:
+"				When the completion base is all-lowercase, try
+"				strict-noic -> strict-ic -> relaxed-noic ->
+"				relaxed-ic fallback. 
 "	013	11-Dec-2011	Split off functions into separate autoload
 "				script and documentation into dedicated help
 "				file. 
@@ -34,6 +39,10 @@ if ! exists('g:CamelCaseComplete_FindStartMark')
     " for Vim 7.1. 
     let g:CamelCaseComplete_FindStartMark = (v:version < 702 ? "'" : '"')
 endif
+if ! exists('g:CamelCaseComplete_CaseInsensitiveFallback')
+    let g:CamelCaseComplete_CaseInsensitiveFallback = 1
+endif
+
 
 
 "- mappings --------------------------------------------------------------------
