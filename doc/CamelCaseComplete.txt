@@ -38,6 +38,11 @@ SEE ALSO								     *
 
 ==============================================================================
 USAGE						     *CamelCaseComplete-usage*
+
+In insert mode, type some or all first letters of the desired CamelCaseWord or
+underscore_word, then invoke the completion via CTRL-X CTRL-C.
+You can then search forward and backward via CTRL-N / CTRL-P, as usual.
+
 							     *i_CTRL-X_CTRL-C*
 CTRL-X CTRL-C		Find matches for CamelCaseWords and underscore_words
 			whose individual word fragments begin with the typed
@@ -122,10 +127,10 @@ CTRL-X CTRL-C		Find matches for CamelCaseWords and underscore_words
 INSTALLATION				      *CamelCaseComplete-installation*
 
 This script is packaged as a |vimball|. If you have the "gunzip" decompressor
-in your PATH, simply edit the *.vba.gz package in Vim; otherwise, decompress
+in your PATH, simply edit the *.vmb.gz package in Vim; otherwise, decompress
 the archive first, e.g. using WinZip. Inside Vim, install by sourcing the
 vimball or via the |:UseVimball| command. >
-    vim CamelCaseComplete.vba.gz
+    vim CamelCaseComplete*.vmb.gz
     :so %
 To uninstall, use the |:RmVimball| command.
 
@@ -141,9 +146,9 @@ For a permanent configuration, put the following commands into your |vimrc|:
 
 		 *b:CamelCaseComplete_complete* *g:CamelCaseComplete_complete*
 Analoguous to the 'complete' option, you can specify which buffers will be
-scanned for completion candidates. Currently, only '.' (current buffer) and
-'w' (buffers from other windows) are supported. >
-    let g:CamelCaseComplete_complete = '.,w'
+scanned for completion candidates. Currently, '.' (current buffer), 'w'
+(buffers from other windows), and 'b' (other listed buffers) are supported. >
+    let g:CamelCaseComplete_complete = '.,w,b'
 The global setting can be overridden for a particular buffer
 (b:CamelCaseComplete_complete).
 
