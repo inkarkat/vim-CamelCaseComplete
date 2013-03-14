@@ -164,6 +164,12 @@ the case of the first CamelWord fragment and all underscore_word fragments
 must always match exactly: >
     let g:CamelCaseComplete_CaseInsensitiveFallback = 0
 <
+						     *CamelCaseComplete-remap*
+If you want to use a different mapping, map your keys to the
+<Plug>(CamelCaseComplete) mapping target _before_ sourcing the script (e.g.
+in your |vimrc|): >
+    imap <C-x><C-c> <Plug>(CamelCaseComplete)<Plug>(CamelCasePostComplete)
+<
 ==============================================================================
 LIMITATIONS				       *CamelCaseComplete-limitations*
 
