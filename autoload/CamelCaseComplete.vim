@@ -10,6 +10,8 @@
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS 
+"   1.00.015	19-Jan-2012	ENH: Handle 'smartcase', as this doesn't work by
+"				itself. 
 "	014	18-Jan-2012	ENH: Add
 "				g:CamelCaseComplete_CaseInsensitiveFallback:
 "				When the completion base is all-lowercase, try
@@ -348,21 +350,41 @@ function! CamelCaseComplete#CamelCaseComplete( findstart, base )
 "****D let [g:sr, g:rr] = [l:strictRegexp, l:relaxedRegexp]
 	if empty(l:strictRegexp) | throw 'ASSERT: At least a strict regexp should have been built.' | endif
 
+	let l:matches = []
+
+	if &ignorecase && &smartcase && a:base !~# '\u'
+	    " The 'smartcase' setting doesn't work by itself, because the
+	    " generated regexps always contain uppercase letters, and therefore
+	    " cause Vim to always perform a case-sensitive search. Therefore, we
+	    " need to temporarily disable 'smartcase' (so that 'ignorecase'
+	    " applies unconditionally) when the condition for 'smartcase'
+	    " (i.e. completion base contains uppercase characters) does not
+	    " apply. 
+	    let l:save_smartcase = &smartcase
+	    set nosmartcase
+	endif
+
 	" Find keywords matching the prepared regexp. Fall back to a
 	" case-insensitive search when there are no matches. Use the relaxed
 	" regexp when the strict one doesn't yield any matches, also with the
 	" fallback. 
-	let l:matches = []
-	call s:FindMatches(l:matches, l:strictRegexp, '', 0)
-	if empty(l:matches) && s:IsSmartCaseFallback(a:base)
-	    call s:FindMatches(l:matches, l:strictRegexp, 'Strict', 1)
-	endif
-	if empty(l:matches) && ! empty(l:relaxedRegexp)
-	    call s:FindMatches(l:matches, l:relaxedRegexp, 'Relaxed', 0)
-	endif
-	if empty(l:matches) && ! empty(l:relaxedRegexp) && s:IsSmartCaseFallback(a:base)
-	    call s:FindMatches(l:matches, l:relaxedRegexp, 'Relaxed', 1)
-	endif
+	try
+	    call s:FindMatches(l:matches, l:strictRegexp, '', 0)
+	    if empty(l:matches) && s:IsSmartCaseFallback(a:base)
+		call s:FindMatches(l:matches, l:strictRegexp, 'Strict', 1)
+	    endif
+	    if empty(l:matches) && ! empty(l:relaxedRegexp)
+		call s:FindMatches(l:matches, l:relaxedRegexp, 'Relaxed', 0)
+	    endif
+	    if empty(l:matches) && ! empty(l:relaxedRegexp) && s:IsSmartCaseFallback(a:base)
+		call s:FindMatches(l:matches, l:relaxedRegexp, 'Relaxed', 1)
+	    endif
+	finally
+	    if exists('l:save_smartcase')
+		let &smartcase = l:save_smartcase
+	    endif
+	endtry
+
 	let s:isNoMatches = empty(l:matches)
 	return l:matches
     endif
