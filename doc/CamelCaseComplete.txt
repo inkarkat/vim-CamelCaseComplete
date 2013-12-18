@@ -182,6 +182,10 @@ IDEAS						     *CamelCaseComplete-ideas*
 ==============================================================================
 HISTORY						   *CamelCaseComplete-history*
 
+1.01	RELEASEME
+- Factor out CamelCaseComplete#BuildRegexp() for re-use by the new
+  InnerFragmentComplete.vim plugin.
+
 1.00	01-Feb-2012
 First published version.
 
@@ -189,7 +193,7 @@ First published version.
 Started development.
 
 ==============================================================================
-Copyright: (C) 2009-2012 Ingo Karkat
+Copyright: (C) 2009-2013 Ingo Karkat
 The VIM LICENSE applies to this plugin; see |copyright|.
 
 Maintainer:	Ingo Karkat <ingo@karkat.de>
