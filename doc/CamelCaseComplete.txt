@@ -182,9 +182,11 @@ IDEAS						     *CamelCaseComplete-ideas*
 ==============================================================================
 HISTORY						   *CamelCaseComplete-history*
 
-1.01	RELEASEME
+1.01	19-Dec-2013
 - Factor out CamelCaseComplete#BuildRegexp() for re-use by the new
   InnerFragmentComplete.vim plugin.
+- Add value "b" (other listed buffers) to the plugin's 'complete' option
+  offered by CompleteHelper.vim 1.20.
 
 1.00	01-Feb-2012
 First published version.
