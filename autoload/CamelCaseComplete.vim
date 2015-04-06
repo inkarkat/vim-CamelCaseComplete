@@ -2,14 +2,18 @@
 " underscore_words based on anchor characters for each word fragment.
 "
 " DEPENDENCIES:
-"   - CompleteHelper.vim autoload script.
+"   - CompleteHelper.vim autoload script
+"   - ingo/plugin/setting.vim autoload script
 "
-" Copyright: (C) 2009-2013 Ingo Karkat
+" Copyright: (C) 2009-2015 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
 "
 " REVISION	DATE		REMARKS
+"   1.02.017	12-Jan-2015	Remove default g:CamelCaseComplete_complete
+"				configuration and default to 'complete' option
+"				value instead.
 "   1.01.016	02-Oct-2013	Factor out CamelCaseComplete#BuildRegexp() for
 "				re-use by the new InnerFragmentComplete.vim
 "				plugin.
@@ -96,7 +100,7 @@ let s:save_cpo = &cpo
 set cpo&vim
 
 function! s:GetCompleteOption()
-    return (exists('b:CamelCaseComplete_complete') ? b:CamelCaseComplete_complete : g:CamelCaseComplete_complete)
+    return ingo#plugin#setting#GetBufferLocal('CamelCaseComplete_complete', &complete)
 endfunction
 
 function! s:ToCamelCaseAnchor( anchor )
