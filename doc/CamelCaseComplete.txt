@@ -184,6 +184,9 @@ IDEAS						     *CamelCaseComplete-ideas*
 HISTORY						   *CamelCaseComplete-history*
 
 1.02	RELEASEME
+- Need special case for given underscore anchor (e.g. in "f_br" base); then,
+  the assertion for alphabetic anchors (here: "b") must _not_ assert that
+  there's no underscore before it.
 - Remove default g:CamelCaseComplete_complete configuration and default to
   'complete' option value instead.
 
