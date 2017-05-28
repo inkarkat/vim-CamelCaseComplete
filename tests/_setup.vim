@@ -1,2 +1,2 @@
-let g:CamelCaseComplete_FindStartMark = ''
+runtime plugin/CamelCaseComplete.vim
 
