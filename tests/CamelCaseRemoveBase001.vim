@@ -7,17 +7,17 @@ new
 
 call SetCompletion("\<C-x>\<C-c>")
 
-call Insert('fmicw', 0)
-call Insert('fmiow', 0)
+call Insert('Fmicw', 0)
+call Insert('Fmiow', 0)
 normal! o
-call Insert('fxw', 0)
-call Insert('no match:fxw', 0)
+call Insert('Fxw', 0)
+call Insert('no match:Fxw', 0)
 
 let g:CamelCaseComplete_FindStartMark = ''
 normal! o- no findstart mark -
 normal! o
-call Insert('fxw', 0)
-call Insert('no match:fxw', 0)
+call Insert('Fxw', 0)
+call Insert('no match:Fxw', 0)
 
 call vimtest#SaveOut()
 call vimtest#Quit()
