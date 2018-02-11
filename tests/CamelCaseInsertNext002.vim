@@ -1,8 +1,9 @@
-" Test: Keyword delimiting. 
+" Test: Keyword delimiting of next matches.
 
-" Keep the completion base when no matches here. 
+" Keep the completion base when no matches here.
 let g:CamelCaseComplete_FindStartMark = ''
 
+let g:CompleteHelper_IsDefaultToBackwardSearch = 0
 source ../helpers/insert.vim
 view CamelCaseComplete.txt
 new
@@ -30,4 +31,3 @@ call Insert('Ews#Tt', 0)
 
 call vimtest#SaveOut()
 call vimtest#Quit()
-
