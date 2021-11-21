@@ -1,8 +1,8 @@
-" Test: Completion with augmented iskeyword. 
+" Test: Completion with augmented iskeyword.
 
-source ../helpers/completetest.vim
+runtime tests/helpers/completetest.vim
 call vimtest#StartTap()
-call vimtap#Plan(8) 
+call vimtap#Plan(8)
 edit CamelCaseComplete.txt
 
 set completefunc=CamelCaseComplete#CamelCaseComplete
@@ -21,4 +21,3 @@ call IsMatchesInIsolatedLine('Tmtmtm', [], 'no more !-match for Tmtmtm')
 call IsMatchesInIsolatedLine('TMTMTM', [], 'no more !-match for TMTMTM')
 
 call vimtest#Quit()
-
