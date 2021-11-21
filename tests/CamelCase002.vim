@@ -1,8 +1,8 @@
-" Test: Completion base includes non-alphabetic characters. 
+" Test: Completion base includes non-alphabetic characters.
 
-source ../helpers/completetest.vim
+runtime tests/helpers/completetest.vim
 call vimtest#StartTap()
-call vimtap#Plan(15) 
+call vimtap#Plan(15)
 edit CamelCaseComplete.txt
 
 set completefunc=CamelCaseComplete#CamelCaseComplete
@@ -22,7 +22,7 @@ call IsMatchesInIsolatedLine('@H!TM', ['@Hallo!TiggleMe:TaggleMe:ToggleMe', '@Ha
 " Note: the '@Hello!...' identifiers do NOT match, because the single 'h' anchor
 " requires an actual CamelCaseWord or underscore_word match at that position.
 " Only when more anchors ('tm...') are given will the 'h' match a single
-" CamelCase fragment, too. 
+" CamelCase fragment, too.
 call IsMatchesInIsolatedLine('@H', ['@Hallo!TiggleMe:TaggleMe:ToggleMe', '@Hallo!Tiggle_Me:Taggle_Me:Toggle_Me', '@HeyHo!TickMeTockMeTuckMe', '@HeyHo!Tick_Me_Tock_Me_Tuck_Me', '@HeyHo!TiggleMe:TaggleMe:ToggleMe', '@HeyHo!Tiggle_Me:Taggle_Me:Toggle_Me'], 'relaxed matches for @H')
 call IsMatchesInIsolatedLine('!B!wmwmwm', ['!Boy!wiggle_me:waggle_me:woggle_me'], 'strict match for !B!wmwmwm')
 
@@ -34,4 +34,3 @@ setlocal iskeyword-=.
 call IsMatchesInIsolatedLine('@!', ['@Hallo!TiggleMe:TaggleMe:ToggleMe', '@Hallo!Tiggle_Me:Taggle_Me:Toggle_Me', '@HeyHo!TickMeTockMeTuckMe', '@HeyHo!Tick_Me_Tock_Me_Tuck_Me', '@HeyHo!TiggleMe:TaggleMe:ToggleMe', '@HeyHo!Tiggle_Me:Taggle_Me:Toggle_Me'], 'relaxed matches for @!')
 
 call vimtest#Quit()
-
