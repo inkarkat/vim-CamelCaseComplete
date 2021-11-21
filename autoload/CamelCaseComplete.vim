@@ -5,7 +5,7 @@
 "   - CompleteHelper.vim autoload script
 "   - ingo/plugin/setting.vim autoload script
 "
-" Copyright: (C) 2009-2015 Ingo Karkat
+" Copyright: (C) 2009-2019 Ingo Karkat
 "   The VIM LICENSE applies to this script; see ':help copyright'.
 "
 " Maintainer:	Ingo Karkat <ingo@karkat.de>
@@ -362,7 +362,7 @@ function! CamelCaseComplete#CamelCaseComplete( findstart, base )
 	if ! empty(g:CamelCaseComplete_FindStartMark)
 	    " Record the position of the start of the completion base to allow
 	    " removal of the completion base if no matches were found.
-	    let l:findstart = [0, line('.'), l:startCol, 0]
+	    let l:findstart = ingo#pos#Make4(line('.'), l:startCol)
 	    call setpos(printf("'%s", g:CamelCaseComplete_FindStartMark), l:findstart)
 	endif
 
