@@ -1,8 +1,8 @@
-" Test: Completion of CamelCase words when '_' is not a keyword character; 
+" Test: Completion of CamelCase words when '_' is not a keyword character;
 
-source ../helpers/completetest.vim
+runtime tests/helpers/completetest.vim
 call vimtest#StartTap()
-call vimtap#Plan(10) 
+call vimtap#Plan(10)
 edit CamelCaseComplete.txt
 setlocal iskeyword-=_
 
@@ -21,9 +21,8 @@ call IsMatchesInIsolatedLine('o', ['or_both'], 'single-anchor match starting and
 call IsMatchesInIsolatedLine('msu', ['mul__sub__und', 'multiple__subsequent____underscores'], 'match for multiple subsequent underscores')
 call IsMatchesInIsolatedLine('msue', ['mul__sub__und__everywhere'], 'match for multiple subsequent underscores starting and ending')
 
-" Perform the no-anchor completions on a minimal set of completion candidates. 
+" Perform the no-anchor completions on a minimal set of completion candidates.
 %g!/^MINIMAL:/d
 call IsMatchesInIsolatedLine('', ['identifierInCamelCase', 'jdentifierJnCamelCase', 'preferring_underscore_words', 'qreferring_underscore_xords', 'starting_with_underscore', 'ending_with_underscore', 'or_both'], 'no-anchor matches')
 
 call vimtest#Quit()
-
