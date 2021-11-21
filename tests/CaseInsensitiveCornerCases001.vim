@@ -1,8 +1,8 @@
-" Test: Ignorecase completion of CamelCase words corner cases. 
+" Test: Ignorecase completion of CamelCase words corner cases.
 
-source ../helpers/completetest.vim
+runtime tests/helpers/completetest.vim
 call vimtest#StartTap()
-call vimtap#Plan(3) 
+call vimtap#Plan(3)
 edit CamelCaseComplete.txt
 
 set completefunc=CamelCaseComplete#CamelCaseComplete
@@ -14,4 +14,3 @@ call IsMatchesInIsolatedLine('V', ['virtCol', 'VirtColStrFromStart', 'VirtColStr
 call IsMatchesInIsolatedLine('b', ['BadCodeName', 'bad_code_name', 'bad_CODE_NAME', 'BAD_CODE_NAME'], 'single-anchor match for b')
 
 call vimtest#Quit()
-
