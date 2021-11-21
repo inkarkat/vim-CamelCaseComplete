@@ -1,8 +1,8 @@
-" Test: Completion of CamelCase words corner cases. 
+" Test: Completion of CamelCase words corner cases.
 
-source ../helpers/completetest.vim
+runtime tests/helpers/completetest.vim
 call vimtest#StartTap()
-call vimtap#Plan(22) 
+call vimtap#Plan(22)
 edit CamelCaseComplete.txt
 
 set completefunc=CamelCaseComplete#CamelCaseComplete
@@ -35,9 +35,8 @@ call IsMatchesInIsolatedLine('o', ['_or_both_'], 'single-anchor match starting a
 call IsMatchesInIsolatedLine('msu', ['multiple__subsequent____underscores'], 'match for multiple subsequent underscores')
 call IsMatchesInIsolatedLine('msue', ['__mul__sub__und__everywhere__'], 'match for multiple subsequent underscores starting and ending')
 
-" Perform the no-anchor completions on a minimal set of completion candidates. 
+" Perform the no-anchor completions on a minimal set of completion candidates.
 %g!/^MINIMAL:/d
 call IsMatchesInIsolatedLine('', ['identifierInCamelCase', 'jdentifierJnCamelCase', 'preferring_underscore_words', 'qreferring_underscore_xords', '_starting_with_underscore', 'ending_with_underscore_', '_or_both_'], 'no-anchor matches')
 
 call vimtest#Quit()
-
