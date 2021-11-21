@@ -1,7 +1,7 @@
 " Test: Insertion of previous matches of CamelCase words.
 
 let g:CompleteHelper_IsDefaultToBackwardSearch = 1
-source ../helpers/insert.vim
+runtime tests/helpers/insert.vim
 view CamelCaseComplete.txt
 new
 
@@ -24,4 +24,3 @@ call Insert('Fmicw', 0)
 
 call vimtest#SaveOut()
 call vimtest#Quit()
-
