@@ -1,7 +1,7 @@
-" Test: Removal of CamelCase base when no match. 
+" Test: Removal of CamelCase base when no match.
 
 let g:CamelCaseComplete_FindStartMark = 'z'
-source ../helpers/insert.vim
+runtime tests/helpers/insert.vim
 view CamelCaseComplete.txt
 new
 
@@ -21,4 +21,3 @@ call Insert('no match:Fxw', 0)
 
 call vimtest#SaveOut()
 call vimtest#Quit()
-
