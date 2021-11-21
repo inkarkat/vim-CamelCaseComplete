@@ -1,11 +1,11 @@
-" Test: Relaxed completion of CamelCase words with fallback. 
+" Test: Relaxed completion of CamelCase words with fallback.
 " Tests that the fallback is only active when the completion base does not
-" contain uppercase characters. 
-" Tests that the fallback mostly yields the same results as 'smartcase'. 
+" contain uppercase characters.
+" Tests that the fallback mostly yields the same results as 'smartcase'.
 
-source ../helpers/completetest.vim
+runtime tests/helpers/completetest.vim
 call vimtest#StartTap()
-call vimtap#Plan(24) 
+call vimtap#Plan(24)
 edit CamelCaseComplete.txt
 
 set completefunc=CamelCaseComplete#CamelCaseComplete
