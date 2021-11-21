@@ -1,0 +1,5 @@
+FindMatchesInCurrentWindow FindMatchesInOtherWindows 
+FindMatchesInOtherWindows FindMatchesInCurrentWindow 
+underscore_CODE_NAME underscore_Code_Name 
+g:FindMatchesInCurrentWindow s:FindMatchesInCurrentWindow 
+|FindMatchesInCurrentWindow |
