@@ -17,6 +17,7 @@
 " this_crazy_name or underscore_code_name, but not underscore_code_name neither bad_code_name. 
 " this_Crazy_Name or underscore_Code_Name, but not underscore_CODE_NAME neither bad_CODE_NAME. 
 " this_CRAZY_NAME or underscore_CODE_NAME, but not underscore_CODE_NAME neither BAD_CODE_NAME. 
+" UpperCrazyUpper or Upper_crazy_Upper or UPPER_CRAZY_UPPER
 
 call s:FindMatchesInCurrentWindow( a:matches, a:pattern, {}, a:options )
 call s:FindMatchesInOtherWindows( a:matches, a:pattern, a:options ) 
@@ -44,6 +45,7 @@ function! s:VirtColStrFromStart( expr, virtCol )
 function! s:VirtColStrFromEnd( expr, virtCol )
 function! EchoWithoutScrolling#GetTabReplacement( column, tabstop )
 function! EchoWithoutScrolling#RenderTabs( text, tabstop, startColumn )
+function! EchoWithoutScrolling#ReplaceTabs( text, tabstop, startColumn )
 function! EchoWithoutScrolling#TruncateTo( text, length )
 function! EchoWithoutScrolling#Truncate( text, ... )
 function! EchoWithoutScrolling#Echo( text )
