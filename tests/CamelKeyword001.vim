@@ -1,8 +1,8 @@
-" Test: Completion of CamelKeyword words. 
+" Test: Completion of CamelKeyword words.
 
-source ../helpers/completetest.vim
+runtime tests/helpers/completetest.vim
 call vimtest#StartTap()
-call vimtap#Plan(125) 
+call vimtap#Plan(125)
 edit CamelKeyword.txt
 
 set completefunc=CamelCaseComplete#CamelCaseComplete
@@ -35,7 +35,7 @@ call IsMatchesInIsolatedLine('t#s',   ['tingle#sakeDrosss'], 'relaxed Camel matc
 call IsMatchesInIsolatedLine('s#d',   ['single#sake_dross', 'single#lake_dros_repatable'], 'relaxed underscore matches for s#d')
 call IsMatchesInIsolatedLine('t#d',   ['tingle#sakeDrosss', 'tingle#lakeDrossRepeatable'], 'relaxed Camel matches for t#d')
 
-" Special case: These treat "single#sake" as one underscore fragment. 
+" Special case: These treat "single#sake" as one underscore fragment.
 call IsMatchesInIsolatedLine('sd',    ['single#sake_dross'], 'strict underscore matches for sd')
 call IsMatchesInIsolatedLine('td',    ['tingle#sakeDrosss'], 'strict Camel matches for td')
 
@@ -98,9 +98,9 @@ call IsMatchesInIsolatedLine('x#b',   ['xepeatableMapping#takeBross', 'xepeatabl
 call IsMatchesInIsolatedLine('uc',    ['upeatable_mapping#take_cros', 'upeatable_mapping#make_cros_repatable'], 'relaxed underscore matches for uc')
 call IsMatchesInIsolatedLine('xb',    ['xepeatableMapping#takeBross', 'xepeatableMapping#makeBrossRepeatable'], 'relaxed CamelCase matches for xb')
 
-" Special case: This treats "mapping#take" as one underscore fragment. 
+" Special case: This treats "mapping#take" as one underscore fragment.
 call IsMatchesInIsolatedLine('umc',   ['upeatable_mapping#take_cros'], 'strict underscore matches for umc')
-" Special case: This treats "Mapping#take" as one CamelCase fragment. 
+" Special case: This treats "Mapping#take" as one CamelCase fragment.
 call IsMatchesInIsolatedLine('xmb',   ['xepeatableMapping#takeBross'], 'strict CamelCase matches for xmb')
 
 call IsMatchesInIsolatedLine('um#t',  ['upeatable_mapping#take_cros'], 'relaxed underscore matches for um#t')
