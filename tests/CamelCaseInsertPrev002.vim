@@ -4,7 +4,7 @@
 let g:CamelCaseComplete_FindStartMark = ''
 
 let g:CompleteHelper_IsDefaultToBackwardSearch = 1
-source ../helpers/insert.vim
+runtime tests/helpers/insert.vim
 view CamelCaseComplete.txt
 new
 
@@ -27,7 +27,6 @@ normal! o
 call Insert('ews#Tt', 0)
 setlocal iskeyword+=#
 call Insert('Ews#Tt', 0)
-
 
 call vimtest#SaveOut()
 call vimtest#Quit()
