@@ -1,8 +1,8 @@
-" Test: Smartcase completion of CamelCase words. 
+" Test: Smartcase completion of CamelCase words.
 
-source ../helpers/completetest.vim
+runtime tests/helpers/completetest.vim
 call vimtest#StartTap()
-call vimtap#Plan(12) 
+call vimtap#Plan(12)
 edit CamelCaseComplete.txt
 set ignorecase smartcase
 
@@ -23,4 +23,3 @@ call IsMatchesInIsolatedLine('tN',  ['thatCrazyName', 'this_Crazy_Name', 'this_C
 call IsMatchesInIsolatedLine('UCN', [], 'no matches for UCN')
 
 call vimtest#Quit()
-
