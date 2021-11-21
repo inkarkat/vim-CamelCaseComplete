@@ -1,0 +1,3 @@
+autoload/CamelCaseComplete.vim
+plugin/CamelCaseComplete.vim
+doc/CamelCaseComplete.txt
