@@ -1,8 +1,8 @@
-" Test: Completion of CamelCase words. 
+" Test: Completion of CamelCase words.
 
-source ../helpers/completetest.vim
+runtime tests/helpers/completetest.vim
 call vimtest#StartTap()
-call vimtap#Plan(22) 
+call vimtap#Plan(22)
 edit CamelCaseComplete.txt
 
 set completefunc=CamelCaseComplete#CamelCaseComplete
@@ -35,4 +35,3 @@ call IsMatchesInContext('some text ', ' trailing text', 'iicc', ['identifierInCa
 call IsMatchesInContext('some text;', ';trailing text', 'iicc', ['identifierInCamelCase'], 'single CamelCase strict match inside ;-delimted text')
 
 call vimtest#Quit()
-
