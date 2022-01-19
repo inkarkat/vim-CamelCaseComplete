@@ -1,4 +1,0 @@
-FindMatchesInCurrentWindow --FindMatchesInCurrentWindow 
-GetVirtStartColOfCurrentCharacter imtr s:GetVirtColOfCurrentCharacter s:GetVirtColOfCurrentCharacter 
-Elelp EchoLine#EchoLinePart 
-ews#TiggleMe:TaggleMe:ToggleMe EchoWithoutScrolling#TruncateTo 
